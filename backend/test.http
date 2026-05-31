@@ -1,0 +1,44 @@
+### Pomodoria API — use REST Client (VS Code) or similar
+### After login/register, copy token into @token for protected routes.
+
+@baseUrl = http://localhost:5000
+@token = REPLACE_WITH_JWT_FROM_LOGIN_OR_REGISTER
+
+### Health
+GET {{baseUrl}}/health
+
+### 1. Register
+POST {{baseUrl}}/api/auth/register
+Content-Type: application/json
+
+{
+  "name": "Test User",
+  "email": "test@test.com",
+  "password": "123456"
+}
+
+### 2. Login
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@test.com",
+  "password": "123456"
+}
+
+### 3. Create session (requires Bearer token)
+POST {{baseUrl}}/api/sessions
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "type": "focus",
+  "duration": 25,
+  "startTime": "2026-05-02T10:00:00.000Z",
+  "endTime": "2026-05-02T10:25:00.000Z",
+  "completed": true
+}
+
+### 4. Get stats
+GET {{baseUrl}}/api/sessions/stats
+Authorization: Bearer {{token}}

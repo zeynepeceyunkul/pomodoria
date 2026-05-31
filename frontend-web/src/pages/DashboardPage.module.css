@@ -1,0 +1,283 @@
+.wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 22px 48px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 960px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.leftCol {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.rightCol {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 28px 26px;
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 6%),
+    0 12px 24px -4px rgb(0 0 0 / 8%);
+}
+
+.cardTitle {
+  margin: 0 0 20px;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.profileAvatar {
+  width: 112px;
+  height: 112px;
+  margin: 0 auto 16px;
+  border-radius: 999px;
+  background: #583d5a;
+  color: #ffffff;
+  font-size: 2.5rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profileName {
+  margin: 0 0 8px;
+  text-align: center;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.profileLevel {
+  margin: 0 0 6px;
+  text-align: center;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #583d5a;
+}
+
+.profileSub {
+  margin: 0;
+  text-align: center;
+  font-size: 0.9375rem;
+  color: #9ca3af;
+}
+
+.progressHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.progressHeadLeft {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.progressHeadRight {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #6b7280;
+  font-variant-numeric: tabular-nums;
+}
+
+.track {
+  height: 10px;
+  border-radius: 999px;
+  background: #ede9fe;
+  overflow: hidden;
+}
+
+.fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #583d5a, #7c5f82);
+  transition: width 0.35s ease;
+}
+
+.streakRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 20px;
+  gap: 16px;
+}
+
+.streakLeft {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.streakTextMain {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #374151;
+}
+
+.streakTextSub {
+  margin: 2px 0 0;
+  font-size: 0.8125rem;
+  color: #9ca3af;
+}
+
+.todayGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 520px) {
+  .todayGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.miniCard {
+  position: relative;
+  background: #fafafa;
+  border: 1px solid #f3f4f6;
+  border-radius: 12px;
+  padding: 18px 16px 16px;
+}
+
+.miniIcon {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  color: #583d5a;
+  opacity: 0.85;
+}
+
+.miniLabel {
+  margin: 0 0 8px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #9ca3af;
+}
+
+.miniValue {
+  margin: 0 0 6px;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #583d5a;
+  font-variant-numeric: tabular-nums;
+}
+
+.miniSub {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #9ca3af;
+}
+
+.statList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.statRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 0.9375rem;
+}
+
+.statRow:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.statRow:first-child {
+  padding-top: 0;
+}
+
+.statLabel {
+  color: #6b7280;
+}
+
+.statValue {
+  font-weight: 700;
+  color: #1f2937;
+  font-variant-numeric: tabular-nums;
+}
+
+.aiText {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: #4b5563;
+}
+
+.aiHighlight {
+  font-weight: 600;
+  color: #583d5a;
+}
+
+.loading {
+  padding: 48px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.errorBox {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 22px;
+}
+
+.errorInner {
+  padding: 16px 18px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  color: #991b1b;
+  font-size: 0.9375rem;
+}
+
+.retry {
+  margin-top: 12px;
+  padding: 8px 14px;
+  font-family: inherit;
+  font-weight: 600;
+  color: #ffffff;
+  background: #583d5a;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.flameIcon {
+  flex-shrink: 0;
+  color: #ea580c;
+}
+
+.trophyIcon {
+  flex-shrink: 0;
+  color: #583d5a;
+}

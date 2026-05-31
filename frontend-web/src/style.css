@@ -1,0 +1,73 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+}
+
+body {
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100%;
+}
+
+/* Theme: Settings → Appearance (applied via `applyHtmlTheme`) */
+html[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+html[data-theme='dark'] body {
+  background: #0f172a;
+  color: #e5e7eb;
+}
+
+html[data-theme='dark'] .layout-shell {
+  background: #0f172a;
+}
+
+html[data-theme='dark'] .layout-header {
+  background: #1e293b;
+  border-bottom-color: #334155;
+  box-shadow: none;
+}
+
+html[data-theme='dark'] .layout-main {
+  background: transparent;
+}
+
+html[data-theme='dark'] .layout-logo {
+  color: #e9d5ff;
+}
+
+html[data-theme='dark'] .layout-nav-link {
+  color: #94a3b8;
+}
+
+html[data-theme='dark'] .layout-nav-link:hover {
+  color: #e9d5ff;
+}
+
+html[data-theme='dark'] .layout-nav-active {
+  background: #7c3aed !important;
+  color: #fafafa !important;
+}
+
+html[data-theme='dark'] .layout-user-name {
+  color: #cbd5e1;
+}

@@ -1,0 +1,245 @@
+.root {
+  position: relative;
+  min-height: calc(100vh - 64px);
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px 96px;
+  background: radial-gradient(
+    ellipse 85% 75% at 50% 42%,
+    #f0fcf4 0%,
+    #dff6e6 42%,
+    #cfeedd 72%,
+    #c2e8d4 100%
+  );
+}
+
+.card {
+  width: 100%;
+  max-width: 540px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 48px 44px 42px;
+  text-align: center;
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 6%),
+    0 24px 48px -12px rgb(0 0 0 / 12%);
+}
+
+.badge {
+  display: inline-block;
+  margin: 0 auto 28px;
+  padding: 8px 18px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #047857;
+  background: #d1fae5;
+  border-radius: 999px;
+}
+
+.badgeBreak {
+  display: inline-block;
+  margin: 0 auto 28px;
+  padding: 8px 18px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #1d4ed8;
+  background: #dbeafe;
+  border-radius: 999px;
+}
+
+.timer {
+  margin: 0 0 36px;
+  font-size: clamp(3.25rem, 10vw, 4.5rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  color: #583d5a;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+  align-items: stretch;
+}
+
+.startBtn {
+  flex: 1;
+  min-width: 200px;
+  padding: 16px 22px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: #583d5a;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.startBtn:hover:not(:disabled) {
+  background: #4a3350;
+}
+
+.startBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.resetBtn {
+  flex: 0 1 auto;
+  min-width: 120px;
+  padding: 16px 22px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #583d5a;
+  background: #eef0f3;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.resetBtn:hover:not(:disabled) {
+  background: #e4e7ec;
+}
+
+.resetBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.skipBtn {
+  flex: 1 1 100%;
+  min-width: 200px;
+  padding: 14px 22px;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1e3a8a;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.skipBtn:hover:not(:disabled) {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+.skipBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.footer {
+  margin: 28px 0 0;
+  font-size: 0.9375rem;
+  color: #9ca3af;
+  line-height: 1.5;
+}
+
+.metaMuted {
+  margin: 14px 0 0;
+  font-size: 0.8125rem;
+  color: #b4bcc7;
+  line-height: 1.45;
+}
+
+.alert {
+  margin: 20px 0 0;
+  padding: 12px 14px;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: #991b1b;
+  text-align: left;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+}
+
+.retryBtn {
+  margin-top: 12px;
+  padding: 10px 16px;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: #583d5a;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.retryBtn:hover:not(:disabled) {
+  background: #4a3350;
+}
+
+.retryBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.helpFab {
+  position: fixed;
+  right: 28px;
+  bottom: 28px;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  background: #583d5a;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgb(88 61 90 / 35%);
+  transition:
+    transform 0.15s ease,
+    background-color 0.15s ease;
+  z-index: 10;
+}
+
+.helpFab:hover {
+  background: #4a3350;
+  transform: scale(1.04);
+}
+
+.loading {
+  min-height: calc(100vh - 64px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #583d5a;
+}
+
+@media (max-width: 520px) {
+  .card {
+    padding: 36px 24px 32px;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .startBtn,
+  .resetBtn {
+    min-width: 100%;
+  }
+}

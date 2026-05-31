@@ -1,0 +1,275 @@
+.page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px 22px 48px;
+  background: transparent;
+}
+
+.pageTitle {
+  margin: 0 0 28px;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #583d5a;
+}
+
+.grid4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1024px) {
+  .grid4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .grid4 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 900px) {
+  .grid2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.grid3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+  .grid3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.statCard {
+  position: relative;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 22px 20px 20px;
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 6%),
+    0 12px 24px -4px rgb(0 0 0 / 8%);
+}
+
+.statLabel {
+  margin: 0 36px 12px 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #888888;
+}
+
+.statIcon {
+  position: absolute;
+  top: 20px;
+  right: 18px;
+  color: #583d5a;
+  opacity: 0.9;
+}
+
+.statValue {
+  margin: 0 0 8px;
+  font-size: 1.625rem;
+  font-weight: 700;
+  color: #583d5a;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.statSub {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: #9ca3af;
+}
+
+.chartCard {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px 22px 22px;
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 6%),
+    0 12px 24px -4px rgb(0 0 0 / 8%);
+}
+
+.chartTitle {
+  margin: 0 0 20px;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #583d5a;
+}
+
+.chartCanvas {
+  position: relative;
+  width: 100%;
+  height: min(320px, 52vw);
+  min-height: 240px;
+}
+
+.chartPlaceholder {
+  border: 1px dashed #d1d5db;
+  border-radius: 10px;
+  background: #fafafa;
+  min-height: 220px;
+  padding: 16px 14px 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chartHint {
+  margin: 0 0 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #9ca3af;
+  text-align: center;
+}
+
+.fakeBarChart {
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 4px 28px;
+  border-left: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.fakeBar {
+  flex: 1;
+  min-height: 8px;
+  max-width: 48px;
+  margin: 0 auto;
+  background: #583d5a;
+  border-radius: 4px 4px 0 0;
+  opacity: 0.85;
+}
+
+.fakeBarLabels {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 0 2px;
+}
+
+.fakeBarLabel {
+  flex: 1;
+  text-align: center;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #9ca3af;
+}
+
+.fakeLineWrap {
+  flex: 1;
+  position: relative;
+  padding: 12px 8px 32px;
+  border-left: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.fakeLineSvg {
+  width: 100%;
+  height: 140px;
+  display: block;
+}
+
+.fakeLineLabels {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding: 0 4px;
+}
+
+.metricCard {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 22px 20px;
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 6%),
+    0 12px 24px -4px rgb(0 0 0 / 8%);
+}
+
+.metricCard .statLabel {
+  margin-bottom: 10px;
+}
+
+.metricCard .statValue {
+  font-size: 1.375rem;
+}
+
+.aiCard {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 24px 22px;
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 6%),
+    0 12px 24px -4px rgb(0 0 0 / 8%);
+}
+
+.aiTitle {
+  margin: 0 0 14px;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #583d5a;
+}
+
+.aiText {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: #4b5563;
+}
+
+.aiEm {
+  font-weight: 600;
+  color: #583d5a;
+}
+
+.loading,
+.errorBox {
+  padding: 48px 22px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.errorInner {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 16px 18px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  color: #991b1b;
+  font-size: 0.9375rem;
+}
+
+.retry {
+  margin-top: 12px;
+  padding: 8px 14px;
+  font-family: inherit;
+  font-weight: 600;
+  color: #ffffff;
+  background: #583d5a;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}

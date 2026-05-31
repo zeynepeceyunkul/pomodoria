@@ -1,0 +1,93 @@
+.card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 28px 24px 24px;
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 6%),
+    0 12px 24px -4px rgb(0 0 0 / 8%);
+}
+
+.label {
+  margin: 0 0 16px;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #9ca3af;
+}
+
+.timer {
+  margin: 0 0 24px;
+  text-align: center;
+  font-size: 3rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+  color: #583d5a;
+  line-height: 1;
+}
+
+.controls {
+  display: flex;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.start {
+  flex: 1;
+  padding: 14px 18px;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: #583d5a;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.start:hover:not(:disabled) {
+  background: #4a3350;
+}
+
+.start:disabled {
+  opacity: 0.85;
+  cursor: default;
+}
+
+.secondary {
+  display: flex;
+  gap: 10px;
+}
+
+.secondaryBtn {
+  min-width: 84px;
+  padding: 14px 14px;
+  font-family: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #583d5a;
+  background: #e8eaee;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.secondaryBtn:hover {
+  background: #dce0e7;
+}
+
+@media (max-width: 420px) {
+  .controls {
+    flex-direction: column;
+  }
+
+  .secondary {
+    width: 100%;
+  }
+
+  .secondaryBtn {
+    flex: 1;
+  }
+}
