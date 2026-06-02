@@ -8,11 +8,11 @@
   margin: 0 0 12px;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #583d5a;
+  color: var(--pom-highlight);
 }
 
 .sub {
   margin: 0;
   font-size: 1rem;
-  color: #6b7280;
+  color: var(--pom-text-muted);
 }

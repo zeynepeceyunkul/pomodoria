@@ -116,6 +116,14 @@ export function MainLayout() {
             className={({ isActive }) =>
               `${isActive ? styles.navActive : styles.navLink} ${isActive ? 'layout-nav-active' : 'layout-nav-link'}`
             }
+            to="/tasks"
+          >
+            Tasks
+          </NavLink>
+          <NavLink
+            className={({ isActive }) =>
+              `${isActive ? styles.navActive : styles.navLink} ${isActive ? 'layout-nav-active' : 'layout-nav-link'}`
+            }
             to="/focus"
           >
             Focus
@@ -168,7 +176,13 @@ export function MainLayout() {
             disabled={loadingProfile}
           >
             <span className={styles.avatar}>
-              {loadingProfile ? '…' : avatarLetter(me?.name)}
+              {loadingProfile ? (
+                '…'
+              ) : me?.avatar ? (
+                <img src={me.avatar} alt="" className={styles.avatarImg} />
+              ) : (
+                avatarLetter(me?.name)
+              )}
             </span>
           </button>
           {menuOpen ? (
@@ -204,6 +218,7 @@ export function MainLayout() {
           breakMinutes={me?.settings?.breakDuration ?? 5}
           longBreakMinutes={me?.settings?.longBreakDuration ?? 15}
           sessionsUntilLongBreak={me?.settings?.sessionsUntilLongBreak ?? 4}
+          onSessionSaved={refreshMe}
           prefs={{
             notifySessionReminders: me?.settings?.notifySessionReminders !== false,
             notifyBreakReminders: me?.settings?.notifyBreakReminders !== false,

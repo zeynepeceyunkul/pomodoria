@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { AuthHttpError } from '../api/http';
-import { getProgress } from '../api/users';
-import type { ProgressResponse } from '../api/users';
+import { getProgress, getAchievements } from '../api/users';
+import type { AchievementItem, ProgressResponse } from '../api/users';
+import { CharacterAvatar } from '../components/CharacterAvatar';
+import { buildCharacterState } from '../lib/characterEvolution';
 import { getSessionStats, getMySessions } from '../api/sessions';
 import type { SessionStatsResponse } from '../api/sessions';
 import type { AppOutletContext } from '../layout/outletContext';
@@ -81,47 +83,7 @@ function IconRibbon() {
   );
 }
 
-type AchievementRow = {
-  id: string;
-  title: string;
-  description: string;
-  unlocked: boolean;
-};
-
-function buildAchievements(progress: ProgressResponse, stats: SessionStatsResponse): AchievementRow[] {
-  return [
-    {
-      id: 'first',
-      title: 'First Session',
-      description: 'Complete your first focus session',
-      unlocked: stats.completedFocusSessions >= 1,
-    },
-    {
-      id: 'week',
-      title: 'Week Warrior',
-      description: 'Maintain a 7-day focus streak',
-      unlocked: progress.streak >= 7,
-    },
-    {
-      id: 'century',
-      title: 'Century Club',
-      description: 'Complete 100 focus sessions',
-      unlocked: stats.completedFocusSessions >= 100,
-    },
-    {
-      id: 'master',
-      title: 'Focus Master',
-      description: 'Complete 500 focus sessions',
-      unlocked: stats.completedFocusSessions >= 500,
-    },
-    {
-      id: 'legend',
-      title: 'Legendary Streak',
-      description: 'Reach a 30-day focus streak',
-      unlocked: progress.streak >= 30,
-    },
-  ];
-}
+type AchievementRow = AchievementItem;
 
 function memberSinceLabel(createdAt?: string): string {
   if (!createdAt) return '—';
@@ -150,6 +112,7 @@ export function ProfilePage() {
 
   const [progress, setProgress] = useState<ProgressResponse | null>(null);
   const [stats, setStats] = useState<SessionStatsResponse | null>(null);
+  const [achievements, setAchievements] = useState<AchievementRow[]>([]);
   const [bestHistoryStreak, setBestHistoryStreak] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -159,14 +122,16 @@ export function ProfilePage() {
     setLoading(true);
     setError(null);
     try {
-      const [p, st, sessions] = await Promise.all([
+      const [p, st, sessions, ach] = await Promise.all([
         getProgress(),
         getSessionStats(),
         getMySessions(),
+        getAchievements(),
       ]);
       setProgress(p);
       setStats(st);
       setBestHistoryStreak(longestCompletedFocusStreakDays(sessions));
+      setAchievements(ach.achievements);
     } catch (e) {
       if (e instanceof AuthHttpError && e.status === 401) {
         navigate('/login', { replace: true });
@@ -184,11 +149,6 @@ export function ProfilePage() {
     if (loadingProfile || !me) return;
     void load();
   }, [me, loadingProfile, load, reloadKey]);
-
-  const achievements = useMemo(() => {
-    if (!progress || !stats) return [];
-    return buildAchievements(progress, stats);
-  }, [progress, stats]);
 
   const xpBarPct = useMemo(() => {
     if (!progress) return 0;
@@ -238,6 +198,8 @@ export function ProfilePage() {
   const avgDaily = averageDailyMinutes(stats.totalFocusMinutes, me.createdAt);
   const avgLabel = me.createdAt ? formatMinutes(Math.round(avgDaily)) : '—';
 
+  const character = progress.character ?? buildCharacterState(progress.level);
+
   return (
     <div className={styles.page}>
       <h1 className={styles.title}>Profile &amp; Progress</h1>
@@ -245,11 +207,24 @@ export function ProfilePage() {
       <div className={styles.grid}>
         <div className={styles.leftCol}>
           <section className={styles.card}>
-            <div className={styles.avatar} aria-hidden>
-              ?
+            <div className={styles.userHead}>
+              {me.avatar ? (
+                <div className={styles.userPhotoWrap}>
+                  <img src={me.avatar} alt="" className={styles.userPhoto} />
+                </div>
+              ) : (
+                <div className={styles.avatar}>{me.name?.trim()[0]?.toUpperCase() ?? 'U'}</div>
+              )}
+              <div className={styles.userMeta}>
+                <p className={styles.displayName}>{me.name}</p>
+                <p className={styles.handle}>{handle}</p>
+              </div>
             </div>
-            <p className={styles.levelTitle}>Level {progress.level} Warrior</p>
-            <p className={styles.handle}>{handle}</p>
+          </section>
+
+          <section className={styles.card}>
+            <CharacterAvatar character={character} size="md" />
+            <p className={styles.levelTitle}>Level {progress.level}</p>
             <div className={styles.progressHead}>
               <span className={styles.progressHeadLeft}>XP to Level {progress.level + 1}</span>
               <span className={styles.progressHeadRight}>
@@ -296,9 +271,6 @@ export function ProfilePage() {
                   <p className={styles.streakValue}>{progress.streak} days</p>
                 </div>
               </div>
-              <p className={styles.streakDesc}>
-                Don&apos;t break the chain! Keep focusing to maintain your streak.
-              </p>
             </article>
             <article className={`${styles.card} ${styles.streakCard}`}>
               <div className={styles.streakTop}>
@@ -310,9 +282,6 @@ export function ProfilePage() {
                   <p className={styles.streakValue}>{bestStreakDays} days</p>
                 </div>
               </div>
-              <p className={styles.streakDesc}>
-                Your longest focus streak from completed sessions. Can you beat this record?
-              </p>
             </article>
           </div>
 

@@ -9,7 +9,7 @@
   font-size: 1.75rem;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #583d5a;
+  color: var(--pom-highlight);
 }
 
 .grid {
@@ -38,7 +38,7 @@
 }
 
 .card {
-  background: #ffffff;
+  background: var(--pom-surface);
   border-radius: 15px;
   padding: 28px 24px;
   box-shadow:
@@ -46,13 +46,24 @@
     0 12px 24px -4px rgb(0 0 0 / 8%);
 }
 
+.userHead {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.userMeta {
+  flex: 1;
+  min-width: 0;
+}
+
 .avatar {
   width: 112px;
   height: 112px;
-  margin: 0 auto 18px;
+  flex-shrink: 0;
   border-radius: 999px;
-  background: #583d5a;
-  color: #ffffff;
+  background: var(--pom-primary);
+  color: var(--pom-on-primary);
   font-size: 2.75rem;
   font-weight: 600;
   display: flex;
@@ -60,19 +71,40 @@
   justify-content: center;
 }
 
-.levelTitle {
+.userPhotoWrap {
+  width: 112px;
+  height: 112px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 3px solid var(--pom-border);
+}
+
+.userPhoto {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.displayName {
   margin: 0 0 6px;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--pom-text);
+}
+
+.levelTitle {
+  margin: 18px 0 10px;
   text-align: center;
   font-size: 1.25rem;
   font-weight: 700;
-  color: #583d5a;
+  color: var(--pom-highlight);
 }
 
 .handle {
-  margin: 0 0 22px;
-  text-align: center;
+  margin: 0;
   font-size: 0.9375rem;
-  color: #9ca3af;
+  color: var(--pom-text-soft);
 }
 
 .progressHead {
@@ -86,27 +118,27 @@
 .progressHeadLeft {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--pom-text-muted);
 }
 
 .progressHeadRight {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--pom-text-muted);
   font-variant-numeric: tabular-nums;
 }
 
 .track {
   height: 10px;
   border-radius: 999px;
-  background: #ede9fe;
+  background: var(--pom-track);
   overflow: hidden;
 }
 
 .fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, #583d5a, #7c5f82);
+  background: linear-gradient(90deg, var(--pom-primary), var(--pom-primary-mid));
   transition: width 0.35s ease;
 }
 
@@ -114,7 +146,7 @@
   margin: 0 0 18px;
   font-size: 1.0625rem;
   font-weight: 700;
-  color: #583d5a;
+  color: var(--pom-highlight);
 }
 
 .quickRow {
@@ -122,7 +154,7 @@
   align-items: center;
   gap: 14px;
   padding: 14px 0;
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid var(--pom-bg);
 }
 
 .quickRow:first-of-type {
@@ -134,8 +166,8 @@
   width: 44px;
   height: 44px;
   border-radius: 10px;
-  background: #ecfdf5;
-  color: #15803d;
+  background: var(--pom-badge-focus-bg);
+  color: var(--pom-badge-focus-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -151,14 +183,14 @@
   margin: 0 0 4px;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #9ca3af;
+  color: var(--pom-text-soft);
 }
 
 .quickValue {
   margin: 0;
   font-size: 1.25rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--pom-text);
   font-variant-numeric: tabular-nums;
 }
 
@@ -189,8 +221,8 @@
   width: 48px;
   height: 48px;
   border-radius: 999px;
-  background: #583d5a;
-  color: #ffffff;
+  background: var(--pom-primary);
+  color: var(--pom-on-primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -201,8 +233,8 @@
   width: 48px;
   height: 48px;
   border-radius: 999px;
-  background: #e5e7eb;
-  color: #6b7280;
+  background: var(--pom-border);
+  color: var(--pom-text-muted);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -213,21 +245,14 @@
   margin: 0 0 6px;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #9ca3af;
+  color: var(--pom-text-soft);
 }
 
 .streakValue {
   margin: 0;
   font-size: 1.625rem;
   font-weight: 700;
-  color: #583d5a;
-}
-
-.streakDesc {
-  margin: 12px 0 0;
-  font-size: 0.8125rem;
-  line-height: 1.45;
-  color: #9ca3af;
+  color: var(--pom-highlight);
 }
 
 .achHead {
@@ -237,7 +262,7 @@
   margin: 0 0 18px;
   font-size: 1.0625rem;
   font-weight: 700;
-  color: #583d5a;
+  color: var(--pom-highlight);
 }
 
 .achList {
@@ -253,13 +278,13 @@
   padding: 16px 18px;
   border-radius: 12px;
   border: 1px solid #e9d5ff;
-  background: #ffffff;
+  background: var(--pom-surface);
 }
 
 .achItemLocked {
   opacity: 0.48;
-  border-color: #e5e7eb;
-  background: #fafafa;
+  border-color: var(--pom-border);
+  background: var(--pom-surface-muted);
 }
 
 .achTrophyOn {
@@ -267,7 +292,7 @@
   height: 44px;
   border-radius: 999px;
   background: rgb(88 61 90 / 12%);
-  color: #583d5a;
+  color: var(--pom-highlight);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -278,8 +303,8 @@
   width: 44px;
   height: 44px;
   border-radius: 999px;
-  background: #e5e7eb;
-  color: #9ca3af;
+  background: var(--pom-border);
+  color: var(--pom-text-soft);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -295,17 +320,17 @@
   margin: 0 0 4px;
   font-size: 0.9375rem;
   font-weight: 700;
-  color: #583d5a;
+  color: var(--pom-highlight);
 }
 
 .achItemLocked .achTitle {
-  color: #6b7280;
+  color: var(--pom-text-muted);
 }
 
 .achDesc {
   margin: 0;
   font-size: 0.8125rem;
-  color: #9ca3af;
+  color: var(--pom-text-soft);
   line-height: 1.4;
 }
 
@@ -315,8 +340,8 @@
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.02em;
-  color: #166534;
-  background: #dcfce7;
+  color: var(--pom-badge-focus-text);
+  background: var(--pom-badge-focus-bg);
   border-radius: 999px;
 }
 
@@ -342,31 +367,31 @@
   margin: 0 0 10px;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #9ca3af;
+  color: var(--pom-text-soft);
 }
 
 .bottomValue {
   margin: 0;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #583d5a;
+  color: var(--pom-highlight);
 }
 
 .loading,
 .errorBox {
   padding: 48px 22px;
   text-align: center;
-  color: #6b7280;
+  color: var(--pom-text-muted);
 }
 
 .errorInner {
   max-width: 520px;
   margin: 0 auto;
   padding: 16px 18px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--pom-error-bg);
+  border: 1px solid var(--pom-error-border);
   border-radius: 10px;
-  color: #991b1b;
+  color: var(--pom-error-text);
 }
 
 .retry {
@@ -374,8 +399,8 @@
   padding: 8px 14px;
   font-family: inherit;
   font-weight: 600;
-  color: #ffffff;
-  background: #583d5a;
+  color: var(--pom-on-primary);
+  background: var(--pom-primary);
   border: none;
   border-radius: 8px;
   cursor: pointer;

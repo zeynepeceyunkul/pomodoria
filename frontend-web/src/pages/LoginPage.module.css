@@ -10,13 +10,13 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: #583d5a;
+  background-color: var(--pom-primary);
   padding: 48px 24px;
 }
 
 .brandTitle {
   margin: 0;
-  color: #ffffff;
+  color: var(--pom-on-primary);
   font-size: clamp(2rem, 4vw, 2.75rem);
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -26,7 +26,7 @@
 
 .brandTagline {
   margin: 16px 0 0;
-  color: #ffffff;
+  color: var(--pom-on-primary);
   font-size: 1.0625rem;
   font-weight: 500;
   line-height: 1.5;
@@ -39,14 +39,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f8f9fa;
+  background-color: var(--pom-bg);
   padding: 32px 24px;
 }
 
 .card {
   width: 100%;
   max-width: 420px;
-  background: #ffffff;
+  background: var(--pom-surface);
   border-radius: 14px;
   box-shadow:
     0 4px 6px -1px rgb(0 0 0 / 6%),
@@ -56,7 +56,7 @@
 
 .cardTitle {
   margin: 0 0 28px;
-  color: #583d5a;
+  color: var(--pom-text);
   font-size: 1.625rem;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -76,7 +76,7 @@
   margin-bottom: 8px;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #9ca3af;
+  color: var(--pom-text-soft);
 }
 
 .input {
@@ -84,9 +84,9 @@
   padding: 12px 14px;
   font-size: 1rem;
   font-family: inherit;
-  color: #111827;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
+  color: var(--pom-text);
+  background: var(--pom-surface);
+  border: 1px solid var(--pom-border);
   border-radius: 8px;
   outline: none;
   transition:
@@ -95,16 +95,16 @@
 }
 
 .input::placeholder {
-  color: #d1d5db;
+  color: var(--pom-text-soft);
 }
 
 .input:hover {
-  border-color: #d1d5db;
+  border-color: var(--pom-border);
 }
 
 .input:focus {
-  border-color: #583d5a;
-  box-shadow: 0 0 0 3px rgb(88 61 90 / 15%);
+  border-color: var(--pom-primary-mid);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--pom-primary) 20%, transparent);
 }
 
 .inputInvalid {
@@ -128,9 +128,9 @@
   padding: 10px 12px;
   font-size: 0.875rem;
   line-height: 1.45;
-  color: #991b1b;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  color: var(--pom-error-text);
+  background: var(--pom-error-bg);
+  border: 1px solid var(--pom-error-border);
   border-radius: 8px;
 }
 
@@ -140,8 +140,8 @@
   font-family: inherit;
   font-size: 1rem;
   font-weight: 600;
-  color: #ffffff;
-  background-color: #583d5a;
+  color: var(--pom-on-primary);
+  background-color: var(--pom-primary);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -151,7 +151,7 @@
 }
 
 .submit:hover:not(:disabled) {
-  background-color: #4a3350;
+  background-color: var(--pom-primary-hover);
 }
 
 .submit:disabled {
@@ -163,12 +163,12 @@
   margin: 24px 0 0;
   text-align: center;
   font-size: 0.9375rem;
-  color: #9ca3af;
+  color: var(--pom-text-soft);
 }
 
 .signUpLink {
   font-weight: 600;
-  color: #583d5a;
+  color: var(--pom-link);
   text-decoration: none;
 }
 

@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { colors, radii, shadows } from '../constants/theme';
+import { radii, shadows } from '../constants/theme';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { TextField } from '../components/TextField';
 import { AuthApiError } from '../services/auth';
@@ -19,6 +19,8 @@ import {
   validateRegisterFields,
 } from '../lib/authValidation';
 import { registerRequest } from '../services/auth';
+import { useThemedStyles } from '../hooks/useThemedStyles';
+import type { ThemeColors } from '../hooks/useThemeColors';
 import type { RootStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
@@ -27,6 +29,7 @@ type FieldKey = 'username' | 'email' | 'password' | 'confirmPassword';
 type FieldErrors = Partial<Record<FieldKey, string>>;
 
 export function RegisterScreen({ navigation }: Props) {
+  const styles = useThemedStyles(createRegisterStyles);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -152,83 +155,68 @@ export function RegisterScreen({ navigation }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  flex: { flex: 1 },
-  scroll: {
-    paddingHorizontal: 20,
-    paddingBottom: 28,
-  },
-  brand: {
-    backgroundColor: colors.primary,
-    borderRadius: radii.card,
-    paddingVertical: 36,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  brandTitle: {
-    color: '#fff',
-    fontSize: 28,
-    fontWeight: '700',
-    letterSpacing: -0.5,
-  },
-  brandTag: {
-    marginTop: 10,
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '500',
-    opacity: 0.95,
-    textAlign: 'center',
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.card,
-    padding: 28,
-  },
-  cardTitle: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: colors.primary,
-    marginBottom: 22,
-    letterSpacing: -0.3,
-  },
-  hint: {
-    marginTop: -6,
-    marginBottom: 14,
-    fontSize: 13,
-    lineHeight: 18,
-    color: colors.textSoft,
-  },
-  alert: {
-    backgroundColor: colors.errorBg,
-    borderWidth: 1,
-    borderColor: colors.errorBorder,
-    borderRadius: radii.sm,
-    padding: 12,
-    marginBottom: 14,
-  },
-  alertText: {
-    color: colors.errorText,
-    fontSize: 14,
-  },
-  footerRow: {
-    marginTop: 22,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  footer: {
-    color: colors.textSoft,
-    fontSize: 15,
-  },
-  link: {
-    color: colors.primary,
-    fontWeight: '700',
-    fontSize: 15,
-  },
-});
+const createRegisterStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: c.background },
+    flex: { flex: 1 },
+    scroll: { paddingHorizontal: 20, paddingBottom: 28 },
+    brand: {
+      backgroundColor: c.primary,
+      borderRadius: radii.card,
+      paddingVertical: 36,
+      paddingHorizontal: 20,
+      alignItems: 'center',
+      marginBottom: 20,
+    },
+    brandTitle: {
+      color: c.onPrimary,
+      fontSize: 28,
+      fontWeight: '700',
+      letterSpacing: -0.5,
+    },
+    brandTag: {
+      marginTop: 10,
+      color: c.onPrimary,
+      fontSize: 16,
+      fontWeight: '500',
+      opacity: 0.95,
+      textAlign: 'center',
+    },
+    card: {
+      backgroundColor: c.surface,
+      borderRadius: radii.card,
+      padding: 28,
+    },
+    cardTitle: {
+      fontSize: 26,
+      fontWeight: '700',
+      color: c.text,
+      marginBottom: 22,
+      letterSpacing: -0.3,
+    },
+    hint: {
+      marginTop: -6,
+      marginBottom: 14,
+      fontSize: 13,
+      lineHeight: 18,
+      color: c.textSoft,
+    },
+    alert: {
+      backgroundColor: c.errorBg,
+      borderWidth: 1,
+      borderColor: c.errorBorder,
+      borderRadius: radii.sm,
+      padding: 12,
+      marginBottom: 14,
+    },
+    alertText: { color: c.errorText, fontSize: 14 },
+    footerRow: {
+      marginTop: 22,
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    footer: { color: c.textSoft, fontSize: 15 },
+    link: { color: c.link, fontWeight: '700', fontSize: 15 },
+  });

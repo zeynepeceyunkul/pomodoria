@@ -1,4 +1,15 @@
 const mongoose = require('mongoose');
+const { buildCharacterState } = require('../utils/characterEvolution');
+
+const unlockedAchievementSchema = new mongoose.Schema(
+  {
+    id: { type: String, required: true },
+    title: { type: String, required: true },
+    description: { type: String, default: '' },
+    unlockedAt: { type: Date, default: Date.now },
+  },
+  { _id: false },
+);
 
 const userSchema = new mongoose.Schema(
   {
@@ -18,6 +29,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       minlength: 8,
+    },
+    avatar: {
+      type: String,
+      trim: true,
+      default: null,
     },
     emailVerified: {
       type: Boolean,
@@ -39,6 +55,14 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    passwordResetTokenHash: {
+      type: String,
+      default: null,
+    },
+    passwordResetExpires: {
+      type: Date,
+      default: null,
+    },
     level: {
       type: Number,
       default: 1,
@@ -54,11 +78,27 @@ const userSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+    characterStage: {
+      type: Number,
+      default: 1,
+      min: 1,
+      max: 5,
+    },
+    unlockedAchievements: {
+      type: [unlockedAchievementSchema],
+      default: [],
+    },
   },
   {
     timestamps: true,
   },
 );
+
+userSchema.pre('save', function syncCharacterStage() {
+  if (this.isModified('level') || this.isNew) {
+    this.characterStage = buildCharacterState(this.level).stage;
+  }
+});
 
 const User = mongoose.model('User', userSchema);
 

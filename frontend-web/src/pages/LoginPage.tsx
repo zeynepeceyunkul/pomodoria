@@ -157,9 +157,14 @@ export function LoginPage() {
             </div>
 
             <div className={styles.field}>
-              <label className={styles.label} htmlFor="login-password">
-                Password
-              </label>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <label className={styles.label} htmlFor="login-password">
+                  Password
+                </label>
+                <Link className={styles.signUpLink} to="/forgot-password" style={{ fontSize: '0.8125rem' }}>
+                  Forgot password?
+                </Link>
+              </div>
               <input
                 id="login-password"
                 className={`${styles.input} ${passwordError ? styles.inputInvalid : ''}`}

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -6,7 +7,8 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import { colors, radii } from '../constants/theme';
+import { radii } from '../constants/theme';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 type Props = {
   label: string;
@@ -17,6 +19,25 @@ type Props = {
 };
 
 export function PrimaryButton({ label, onPress, disabled, loading, style }: Props) {
+  const c = useThemeColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        btn: {
+          backgroundColor: c.primary,
+          borderRadius: radii.sm,
+          paddingVertical: 14,
+          paddingHorizontal: 18,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        btnPressed: { backgroundColor: c.primaryHover },
+        btnDisabled: { opacity: 0.65 },
+        label: { color: c.onPrimary, fontSize: 16, fontWeight: '600' },
+      }),
+    [c],
+  );
+
   const inactive = Boolean(disabled || loading);
   return (
     <Pressable
@@ -31,32 +52,10 @@ export function PrimaryButton({ label, onPress, disabled, loading, style }: Prop
       ]}
     >
       {loading ? (
-        <ActivityIndicator color="#fff" />
+        <ActivityIndicator color={c.onPrimary} />
       ) : (
         <Text style={styles.label}>{label}</Text>
       )}
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  btn: {
-    backgroundColor: colors.primary,
-    borderRadius: radii.sm,
-    paddingVertical: 14,
-    paddingHorizontal: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  btnPressed: {
-    backgroundColor: colors.primaryHover,
-  },
-  btnDisabled: {
-    opacity: 0.65,
-  },
-  label: {
-    color: '#ffffff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});

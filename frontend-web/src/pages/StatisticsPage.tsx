@@ -15,7 +15,11 @@ import { Bar, Line } from 'react-chartjs-2';
 import { AuthHttpError } from '../api/http';
 import { getSessionAnalytics, getSessionStats } from '../api/sessions';
 import type { SessionAnalyticsResponse, SessionStatsResponse } from '../api/sessions';
+import { getTaskStats } from '../api/tasks';
+import type { TaskStatsResponse } from '../api/tasks';
 import { formatMinutes } from '../lib/sessionAggregate';
+import { buildInsights } from '../lib/insights';
+import { getChartPalette } from '../lib/theme';
 import styles from './StatisticsPage.module.css';
 
 ChartJS.register(
@@ -29,9 +33,23 @@ ChartJS.register(
   Filler,
 );
 
-const ACCENT = '#583d5a';
-const ACCENT_FILL = 'rgba(88, 61, 90, 0.22)';
-const GRID = '#e5e7eb';
+
+function useChartPalette() {
+  const [palette, setPalette] = useState(() => getChartPalette());
+
+  useEffect(() => {
+    const sync = () => setPalette(getChartPalette());
+    sync();
+    const obs = new MutationObserver(sync);
+    obs.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+    return () => obs.disconnect();
+  }, []);
+
+  return palette;
+}
 
 function IconClock({ className }: { className?: string }) {
   return (
@@ -91,8 +109,10 @@ function shortDayLabel(isoDate: string): string {
 
 export function StatisticsPage() {
   const navigate = useNavigate();
+  const chartPalette = useChartPalette();
   const [stats, setStats] = useState<SessionStatsResponse | null>(null);
   const [analytics, setAnalytics] = useState<SessionAnalyticsResponse | null>(null);
+  const [taskStats, setTaskStats] = useState<TaskStatsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
@@ -101,9 +121,14 @@ export function StatisticsPage() {
     setLoading(true);
     setError(null);
     try {
-      const [st, an] = await Promise.all([getSessionStats(), getSessionAnalytics()]);
+      const [st, an, ts] = await Promise.all([
+        getSessionStats(),
+        getSessionAnalytics(),
+        getTaskStats(),
+      ]);
       setStats(st);
       setAnalytics(an);
+      setTaskStats(ts);
     } catch (e) {
       if (e instanceof AuthHttpError && e.status === 401) {
         navigate('/login', { replace: true });
@@ -112,6 +137,7 @@ export function StatisticsPage() {
       setError(e instanceof Error ? e.message : 'Could not load statistics.');
       setStats(null);
       setAnalytics(null);
+      setTaskStats(null);
     } finally {
       setLoading(false);
     }
@@ -140,20 +166,20 @@ export function StatisticsPage() {
       scales: {
         x: {
           grid: { display: false, drawBorder: false },
-          ticks: { color: '#6b7280', font: { size: 11 } },
+          ticks: { color: chartPalette.text, font: { size: 11 } },
         },
         y: {
           beginAtZero: true,
-          grid: { color: GRID },
+          grid: { color: chartPalette.grid },
           ticks: {
-            color: '#6b7280',
+            color: chartPalette.text,
             font: { size: 11 },
             callback: (value: string | number) => `${value}m`,
           },
         },
       },
     }),
-    [],
+    [chartPalette],
   );
 
   const weekBarData = useMemo(() => {
@@ -164,15 +190,15 @@ export function StatisticsPage() {
         {
           label: 'Focus minutes',
           data: analytics.thisWeekDaily.map((d) => d.focusMinutes),
-          backgroundColor: ACCENT_FILL,
-          borderColor: ACCENT,
+          backgroundColor: chartPalette.fill,
+          borderColor: chartPalette.accent,
           borderWidth: 1.5,
           borderRadius: 8,
           maxBarThickness: 36,
         },
       ],
     };
-  }, [analytics]);
+  }, [analytics, chartPalette]);
 
   const weekLineData = useMemo(() => {
     if (!analytics) return null;
@@ -182,41 +208,89 @@ export function StatisticsPage() {
         {
           label: 'Focus minutes',
           data: analytics.last7Days.map((d) => d.focusMinutes),
-          borderColor: ACCENT,
-          backgroundColor: ACCENT_FILL,
+          borderColor: chartPalette.accent,
+          backgroundColor: chartPalette.fill,
           tension: 0.35,
           fill: true,
           pointRadius: 4,
           pointHoverRadius: 5,
-          pointBackgroundColor: ACCENT,
+          pointBackgroundColor: chartPalette.accent,
         },
       ],
     };
-  }, [analytics]);
+  }, [analytics, chartPalette]);
 
-  const insightsText = useMemo(() => {
-    if (!stats || !analytics) return '';
-    const bestDay = analytics.mostProductiveWeekday;
-    const peakWeekMinutes = Math.max(...analytics.thisWeekDaily.map((d) => d.focusMinutes), 0);
-    const peakWeekDay =
-      peakWeekMinutes > 0
-        ? analytics.thisWeekDaily.find((d) => d.focusMinutes === peakWeekMinutes)?.label
-        : null;
-    const parts: string[] = [];
-    parts.push(
-      `You have logged ${stats.completedFocusSessions} completed focus sessions (${formatMinutes(stats.totalFocusMinutes)} total focus time).`,
-    );
-    if (analytics.todayFocusMinutes > 0) {
-      parts.push(`Today you have recorded ${formatMinutes(analytics.todayFocusMinutes)} of focus time.`);
-    }
-    if (bestDay) {
-      parts.push(`Across all time, most focus minutes fall on ${bestDay}s.`);
-    }
-    if (peakWeekDay && peakWeekMinutes > 0) {
-      parts.push(`This calendar week (UTC), your busiest day so far is ${peakWeekDay} (${formatMinutes(peakWeekMinutes)}).`);
-    }
-    return parts.join(' ');
-  }, [stats, analytics]);
+  const xpLineData = useMemo(() => {
+    if (!analytics?.last30DaysXp?.length) return null;
+    return {
+      labels: analytics.last30DaysXp.map((d) => d.date.slice(5)),
+      datasets: [
+        {
+          label: 'XP earned',
+          data: analytics.last30DaysXp.map((d) => d.xpEarned),
+          borderColor: chartPalette.accent,
+          backgroundColor: chartPalette.fill,
+          tension: 0.35,
+          fill: true,
+          pointRadius: 3,
+          pointHoverRadius: 4,
+          pointBackgroundColor: chartPalette.accent,
+        },
+      ],
+    };
+  }, [analytics, chartPalette]);
+
+  const xpChartOpts = useMemo(
+    () => ({
+      ...chartCommonOpts,
+      plugins: {
+        ...chartCommonOpts.plugins,
+        tooltip: {
+          callbacks: {
+            label(context: { parsed: { y?: number | null } }) {
+              const y = context.parsed.y;
+              const v = typeof y === 'number' ? y : 0;
+              return `${v} XP`;
+            },
+          },
+        },
+      },
+      scales: {
+        ...chartCommonOpts.scales,
+        y: {
+          ...chartCommonOpts.scales.y,
+          ticks: {
+            ...chartCommonOpts.scales.y.ticks,
+            callback: (value: string | number) => `${value}`,
+          },
+        },
+      },
+    }),
+    [chartCommonOpts],
+  );
+
+  const monthlyBarData = useMemo(() => {
+    if (!analytics?.monthlyFocus?.length) return null;
+    return {
+      labels: analytics.monthlyFocus.map((m) => m.label),
+      datasets: [
+        {
+          label: 'Focus minutes',
+          data: analytics.monthlyFocus.map((m) => m.focusMinutes),
+          backgroundColor: chartPalette.fill,
+          borderColor: chartPalette.accent,
+          borderWidth: 1.5,
+          borderRadius: 8,
+          maxBarThickness: 40,
+        },
+      ],
+    };
+  }, [analytics, chartPalette]);
+
+  const insights = useMemo(
+    () => (stats && analytics ? buildInsights(stats, analytics, taskStats) : []),
+    [stats, analytics, taskStats],
+  );
 
   if (loading && !stats && !analytics) {
     return (
@@ -298,6 +372,24 @@ export function StatisticsPage() {
         </section>
       </div>
 
+      {xpLineData ? (
+        <section className={styles.chartCardWide}>
+          <h2 className={styles.chartTitle}>Last 30 days — XP earned (UTC)</h2>
+          <div className={styles.chartCanvasTall}>
+            <Line options={xpChartOpts} data={xpLineData} />
+          </div>
+        </section>
+      ) : null}
+
+      {monthlyBarData ? (
+        <section className={styles.chartCardWide}>
+          <h2 className={styles.chartTitle}>Last 6 months — focus minutes</h2>
+          <div className={styles.chartCanvasTall}>
+            <Bar options={chartCommonOpts} data={monthlyBarData} />
+          </div>
+        </section>
+      ) : null}
+
       <div className={styles.grid3}>
         <article className={styles.metricCard}>
           <p className={styles.statLabel}>Most Productive Day</p>
@@ -314,11 +406,22 @@ export function StatisticsPage() {
           <p className={styles.statValue}>{xpFormatted}</p>
           <p className={styles.statSub}>From logged sessions</p>
         </article>
+        {taskStats ? (
+          <article className={styles.metricCard}>
+            <p className={styles.statLabel}>Completed Tasks</p>
+            <p className={styles.statValue}>{taskStats.completed}</p>
+            <p className={styles.statSub}>{taskStats.pending} pending · {taskStats.dueToday} due today</p>
+          </article>
+        ) : null}
       </div>
 
       <section className={styles.aiCard}>
         <h2 className={styles.aiTitle}>Insights</h2>
-        <p className={styles.aiText}>{insightsText}</p>
+        {insights.map((item) => (
+          <p key={item.title} className={styles.aiText}>
+            <strong>{item.title}:</strong> {item.message}
+          </p>
+        ))}
       </section>
     </div>
   );

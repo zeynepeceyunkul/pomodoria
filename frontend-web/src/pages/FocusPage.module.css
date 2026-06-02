@@ -6,19 +6,13 @@
   align-items: center;
   justify-content: center;
   padding: 40px 20px 96px;
-  background: radial-gradient(
-    ellipse 85% 75% at 50% 42%,
-    #f0fcf4 0%,
-    #dff6e6 42%,
-    #cfeedd 72%,
-    #c2e8d4 100%
-  );
+  background: var(--pom-focus-gradient);
 }
 
 .card {
   width: 100%;
   max-width: 540px;
-  background: #ffffff;
+  background: var(--pom-surface);
   border-radius: 20px;
   padding: 48px 44px 42px;
   text-align: center;
@@ -34,8 +28,8 @@
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.12em;
-  color: #047857;
-  background: #d1fae5;
+  color: var(--pom-badge-focus-text);
+  background: var(--pom-badge-focus-bg);
   border-radius: 999px;
 }
 
@@ -46,9 +40,28 @@
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.12em;
-  color: #1d4ed8;
-  background: #dbeafe;
+  color: var(--pom-badge-break-text);
+  background: var(--pom-badge-break-bg);
   border-radius: 999px;
+}
+
+.taskSelectWrap {
+  display: block;
+  margin: 0 0 20px;
+  text-align: left;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--pom-text-secondary);
+}
+
+.taskSelect {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font: inherit;
 }
 
 .timer {
@@ -58,7 +71,7 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
   line-height: 1;
-  color: #583d5a;
+  color: var(--pom-highlight);
 }
 
 .actions {
@@ -76,8 +89,8 @@
   font-family: inherit;
   font-size: 1rem;
   font-weight: 600;
-  color: #ffffff;
-  background: #583d5a;
+  color: var(--pom-on-primary);
+  background: var(--pom-primary);
   border: none;
   border-radius: 12px;
   cursor: pointer;
@@ -85,7 +98,7 @@
 }
 
 .startBtn:hover:not(:disabled) {
-  background: #4a3350;
+  background: var(--pom-primary-hover);
 }
 
 .startBtn:disabled {
@@ -100,16 +113,18 @@
   font-family: inherit;
   font-size: 1rem;
   font-weight: 600;
-  color: #583d5a;
-  background: #eef0f3;
-  border: none;
+  color: var(--pom-btn-secondary-text);
+  background: var(--pom-btn-secondary-bg);
+  border: 1px solid var(--pom-border);
   border-radius: 12px;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .resetBtn:hover:not(:disabled) {
-  background: #e4e7ec;
+  background: var(--pom-btn-secondary-hover);
 }
 
 .resetBtn:disabled {
@@ -124,9 +139,9 @@
   font-family: inherit;
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #1e3a8a;
-  background: #eff6ff;
-  border: 1px solid #bfdbfe;
+  color: var(--pom-badge-break-text);
+  background: var(--pom-badge-break-bg);
+  border: 1px solid var(--pom-border);
   border-radius: 12px;
   cursor: pointer;
   transition:
@@ -135,8 +150,8 @@
 }
 
 .skipBtn:hover:not(:disabled) {
-  background: #dbeafe;
-  border-color: #93c5fd;
+  background: var(--pom-btn-secondary-hover);
+  border-color: var(--pom-border);
 }
 
 .skipBtn:disabled {
@@ -147,26 +162,20 @@
 .footer {
   margin: 28px 0 0;
   font-size: 0.9375rem;
-  color: #9ca3af;
+  color: var(--pom-text-soft);
   line-height: 1.5;
 }
 
-.metaMuted {
-  margin: 14px 0 0;
-  font-size: 0.8125rem;
-  color: #b4bcc7;
-  line-height: 1.45;
-}
 
 .alert {
   margin: 20px 0 0;
   padding: 12px 14px;
   font-size: 0.875rem;
   line-height: 1.45;
-  color: #991b1b;
+  color: var(--pom-error-text);
   text-align: left;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--pom-error-bg);
+  border: 1px solid var(--pom-error-border);
   border-radius: 10px;
 }
 
@@ -176,15 +185,15 @@
   font-family: inherit;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #ffffff;
-  background: #583d5a;
+  color: var(--pom-on-primary);
+  background: var(--pom-primary);
   border: none;
   border-radius: 10px;
   cursor: pointer;
 }
 
 .retryBtn:hover:not(:disabled) {
-  background: #4a3350;
+  background: var(--pom-primary-hover);
 }
 
 .retryBtn:disabled {
@@ -201,8 +210,8 @@
   padding: 0;
   font-size: 1.25rem;
   font-weight: 700;
-  color: #ffffff;
-  background: #583d5a;
+  color: var(--pom-on-primary);
+  background: var(--pom-primary);
   border: none;
   border-radius: 999px;
   cursor: pointer;
@@ -214,7 +223,7 @@
 }
 
 .helpFab:hover {
-  background: #4a3350;
+  background: var(--pom-primary-hover);
   transform: scale(1.04);
 }
 
@@ -226,7 +235,7 @@
   padding: 40px 20px;
   font-size: 1rem;
   font-weight: 600;
-  color: #583d5a;
+  color: var(--pom-highlight);
 }
 
 @media (max-width: 520px) {

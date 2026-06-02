@@ -10,7 +10,7 @@
   font-size: 1.75rem;
   font-weight: 700;
   letter-spacing: -0.02em;
-  color: #583d5a;
+  color: var(--pom-highlight);
 }
 
 .grid4 {
@@ -60,7 +60,7 @@
 
 .statCard {
   position: relative;
-  background: #ffffff;
+  background: var(--pom-surface);
   border-radius: 12px;
   padding: 22px 20px 20px;
   box-shadow:
@@ -79,7 +79,7 @@
   position: absolute;
   top: 20px;
   right: 18px;
-  color: #583d5a;
+  color: var(--pom-highlight);
   opacity: 0.9;
 }
 
@@ -87,7 +87,7 @@
   margin: 0 0 8px;
   font-size: 1.625rem;
   font-weight: 700;
-  color: #583d5a;
+  color: var(--pom-highlight);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
 }
@@ -95,11 +95,11 @@
 .statSub {
   margin: 0;
   font-size: 0.8125rem;
-  color: #9ca3af;
+  color: var(--pom-text-soft);
 }
 
 .chartCard {
-  background: #ffffff;
+  background: var(--pom-surface);
   border-radius: 12px;
   padding: 24px 22px 22px;
   box-shadow:
@@ -111,7 +111,7 @@
   margin: 0 0 20px;
   font-size: 1.0625rem;
   font-weight: 700;
-  color: #583d5a;
+  color: var(--pom-highlight);
 }
 
 .chartCanvas {
@@ -121,10 +121,27 @@
   min-height: 240px;
 }
 
+.chartCardWide {
+  background: var(--pom-surface);
+  border-radius: 12px;
+  padding: 24px 22px 22px;
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 6%),
+    0 12px 24px -4px rgb(0 0 0 / 8%);
+  margin-bottom: 24px;
+}
+
+.chartCanvasTall {
+  position: relative;
+  width: 100%;
+  height: min(360px, 55vw);
+  min-height: 260px;
+}
+
 .chartPlaceholder {
   border: 1px dashed #d1d5db;
   border-radius: 10px;
-  background: #fafafa;
+  background: var(--pom-surface-muted);
   min-height: 220px;
   padding: 16px 14px 12px;
   display: flex;
@@ -137,7 +154,7 @@
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #9ca3af;
+  color: var(--pom-text-soft);
   text-align: center;
 }
 
@@ -148,8 +165,8 @@
   justify-content: space-between;
   gap: 8px;
   padding: 8px 4px 28px;
-  border-left: 1px solid #e5e7eb;
-  border-bottom: 1px solid #e5e7eb;
+  border-left: 1px solid var(--pom-border);
+  border-bottom: 1px solid var(--pom-border);
 }
 
 .fakeBar {
@@ -157,7 +174,7 @@
   min-height: 8px;
   max-width: 48px;
   margin: 0 auto;
-  background: #583d5a;
+  background: var(--pom-primary);
   border-radius: 4px 4px 0 0;
   opacity: 0.85;
 }
@@ -175,15 +192,15 @@
   text-align: center;
   font-size: 0.6875rem;
   font-weight: 600;
-  color: #9ca3af;
+  color: var(--pom-text-soft);
 }
 
 .fakeLineWrap {
   flex: 1;
   position: relative;
   padding: 12px 8px 32px;
-  border-left: 1px solid #e5e7eb;
-  border-bottom: 1px solid #e5e7eb;
+  border-left: 1px solid var(--pom-border);
+  border-bottom: 1px solid var(--pom-border);
 }
 
 .fakeLineSvg {
@@ -200,7 +217,7 @@
 }
 
 .metricCard {
-  background: #ffffff;
+  background: var(--pom-surface);
   border-radius: 12px;
   padding: 22px 20px;
   box-shadow:
@@ -217,7 +234,7 @@
 }
 
 .aiCard {
-  background: #ffffff;
+  background: var(--pom-surface);
   border-radius: 12px;
   padding: 24px 22px;
   box-shadow:
@@ -229,7 +246,7 @@
   margin: 0 0 14px;
   font-size: 1.0625rem;
   font-weight: 700;
-  color: #583d5a;
+  color: var(--pom-highlight);
 }
 
 .aiText {
@@ -241,24 +258,24 @@
 
 .aiEm {
   font-weight: 600;
-  color: #583d5a;
+  color: var(--pom-highlight);
 }
 
 .loading,
 .errorBox {
   padding: 48px 22px;
   text-align: center;
-  color: #6b7280;
+  color: var(--pom-text-muted);
 }
 
 .errorInner {
   max-width: 520px;
   margin: 0 auto;
   padding: 16px 18px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--pom-error-bg);
+  border: 1px solid var(--pom-error-border);
   border-radius: 10px;
-  color: #991b1b;
+  color: var(--pom-error-text);
   font-size: 0.9375rem;
 }
 
@@ -267,8 +284,8 @@
   padding: 8px 14px;
   font-family: inherit;
   font-weight: 600;
-  color: #ffffff;
-  background: #583d5a;
+  color: var(--pom-on-primary);
+  background: var(--pom-primary);
   border: none;
   border-radius: 8px;
   cursor: pointer;

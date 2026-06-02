@@ -32,9 +32,20 @@ export type ResendVerificationResponse = {
 };
 
 export type VerifyEmailResponse = {
+  verified: boolean;
+  email: string;
+  message?: string;
+};
+
+export type ForgotPasswordResponse = {
+  message: string;
+  devResetUrl?: string;
+  devVerificationUrl?: string;
+};
+
+export type ResetPasswordResponse = {
   message: string;
   email: string;
-  verified: boolean;
 };
 
 /** @deprecated Use AuthSuccessResponse */
@@ -210,4 +221,39 @@ export async function logoutRequest(refreshToken: string | null): Promise<void> 
   } catch {
     /* best-effort */
   }
+}
+
+export async function forgotPasswordRequest(email: string): Promise<ForgotPasswordResponse> {
+  const { res, data } = await postJson<
+    ForgotPasswordResponse & { devVerificationUrl?: string }
+  >('/forgot-password', { email });
+
+  if (!res.ok) {
+    throw new AuthApiError(getErrorMessage(data, 'Could not send reset link.'), res.status);
+  }
+
+  return {
+    message: data.message || 'If that email is registered, a password reset link was sent.',
+    devResetUrl: data.devResetUrl ?? data.devVerificationUrl,
+  };
+}
+
+export async function resetPasswordRequest(
+  token: string,
+  password: string,
+): Promise<ResetPasswordResponse> {
+  const { res, data } = await postJson<ResetPasswordResponse & { code?: string }>(
+    '/reset-password',
+    { token, password },
+  );
+
+  if (!res.ok) {
+    throw new AuthApiError(getErrorMessage(data, 'Password reset failed.'), res.status);
+  }
+
+  if (typeof data.email !== 'string') {
+    throw new Error('Invalid response from server.');
+  }
+
+  return data;
 }

@@ -9,8 +9,9 @@ import {
   type ReactNode,
 } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createFocusSession } from '../api/sessions';
+import { createBreakSession, createFocusSession } from '../api/sessions';
 import { AuthHttpError } from '../api/http';
+import { notifyGamificationResult } from '../lib/gamificationFx';
 import { playTimerChime, tryDesktopNotify } from '../lib/timerFx';
 import type { PomodoroPhase, PomodoroTimerSnapshot } from './pomodoroTimerTypes';
 import {
@@ -42,6 +43,8 @@ type PomodoroTimerContextValue = {
   activeBreakMinutes: number;
   nextBreakIsLong: boolean;
   autoStartSessions: boolean;
+  selectedTaskId: string | null;
+  setSelectedTaskId: (id: string | null) => void;
   startPause: () => void;
   reset: () => void;
   skipBreak: () => void;
@@ -122,12 +125,29 @@ function enterIdleFocusFull(prev: PomodoroTimerSnapshot): PomodoroTimerSnapshot 
   };
 }
 
-async function postCompletedFocus(prev: PomodoroTimerSnapshot): Promise<void> {
+async function postCompletedFocus(
+  prev: PomodoroTimerSnapshot,
+  taskId: string | null,
+  prefs: PomodoroPrefs,
+) {
   const minutes = prev.plannedFocusMinutes;
   const startISO =
     prev.focusStartedAtISO ?? new Date(Date.now() - minutes * 60_000).toISOString();
-  await createFocusSession({
+  const res = await createFocusSession({
     type: 'focus',
+    duration: minutes,
+    startTime: startISO,
+    endTime: new Date().toISOString(),
+    completed: true,
+    ...(taskId ? { taskId } : {}),
+  });
+  notifyGamificationResult(res.gamification, prefs);
+  return res;
+}
+
+async function postCompletedBreak(minutes: number, startISO: string): Promise<void> {
+  await createBreakSession({
+    type: 'break',
     duration: minutes,
     startTime: startISO,
     endTime: new Date().toISOString(),
@@ -142,6 +162,7 @@ type ProviderProps = {
   longBreakMinutes: number;
   sessionsUntilLongBreak: number;
   prefs: PomodoroPrefs;
+  onSessionSaved?: () => void;
   children: ReactNode;
 };
 
@@ -152,9 +173,16 @@ export function PomodoroTimerProvider({
   longBreakMinutes,
   sessionsUntilLongBreak,
   prefs,
+  onSessionSaved,
   children,
 }: ProviderProps) {
   const navigate = useNavigate();
+  const onSessionSavedRef = useRef(onSessionSaved);
+  onSessionSavedRef.current = onSessionSaved;
+
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const selectedTaskIdRef = useRef<string | null>(null);
+  selectedTaskIdRef.current = selectedTaskId;
   const settingsRef = useRef({
     focusMinutes,
     breakMinutes,
@@ -185,6 +213,7 @@ export function PomodoroTimerProvider({
   submittingRef.current = submitting;
 
   const handlingEndRef = useRef(false);
+  const breakStartedAtRef = useRef<string | null>(null);
 
   const persist = useCallback(
     (next: PomodoroTimerSnapshot) => {
@@ -199,9 +228,6 @@ export function PomodoroTimerProvider({
     if (p.notifyBreakReminders) {
       tryDesktopNotify('Break time', 'Your focus session finished — take a break.');
     }
-    if (p.notifyAchievements) {
-      tryDesktopNotify('Progress saved', 'Session recorded. Check Profile for XP and achievements.');
-    }
   }, []);
 
   const onBreakCompletedFx = useCallback(() => {
@@ -212,6 +238,30 @@ export function PomodoroTimerProvider({
     }
   }, []);
 
+  const finalizeBreakEnd = useCallback(
+    async (prev: PomodoroTimerSnapshot) => {
+      const breakMins = prev.activeBreakMinutes || prev.breakMinutesSetting;
+      const startISO =
+        breakStartedAtRef.current ??
+        new Date(Date.now() - breakMins * 60_000).toISOString();
+      try {
+        await postCompletedBreak(breakMins, startISO);
+      } catch (e) {
+        console.warn('Break session save failed', e);
+      }
+      breakStartedAtRef.current = null;
+      onBreakCompletedFx();
+      const autoStart = settingsRef.current.prefs.autoStartSessions;
+      const next = autoStart ? enterFocusRunning(prev) : enterIdleFocusFull(prev);
+      setSnap(next);
+      persist(next);
+      if (autoStart && settingsRef.current.prefs.soundEffects) {
+        queueMicrotask(() => playTimerChime('start'));
+      }
+    },
+    [persist, onBreakCompletedFx],
+  );
+
   const finalizeFocusEnd = useCallback(
     async (prev: PomodoroTimerSnapshot) => {
       if (handlingEndRef.current) return;
@@ -220,10 +270,12 @@ export function PomodoroTimerProvider({
       submittingRef.current = true;
       setSubmitError(null);
       try {
-        await postCompletedFocus(prev);
+        await postCompletedFocus(prev, selectedTaskIdRef.current, settingsRef.current.prefs);
         onFocusCompletedFx();
+        onSessionSavedRef.current?.();
         const autoStart = settingsRef.current.prefs.autoStartSessions;
         const next = autoStart ? enterBreakAfterFocus(prev) : enterBreakPausedAfterFocus(prev);
+        breakStartedAtRef.current = autoStart ? new Date().toISOString() : null;
         setSnap(next);
         persist(next);
       } catch (e) {
@@ -282,13 +334,21 @@ export function PomodoroTimerProvider({
       if (s.endsAt && now >= s.endsAt) {
         const autoStart = settingsRef.current.prefs.autoStartSessions;
         if (s.phase === 'break') {
+          try {
+            const breakMins = s.activeBreakMinutes || s.breakMinutesSetting;
+            const startISO = new Date(s.endsAt - breakMins * 60_000).toISOString();
+            await postCompletedBreak(breakMins, startISO);
+          } catch {
+            /* best-effort */
+          }
           s = autoStart ? enterFocusRunning(s, now) : enterIdleFocusFull(s);
         } else {
           try {
             setSubmitting(true);
             submittingRef.current = true;
-            await postCompletedFocus(s);
+            await postCompletedFocus(s, selectedTaskIdRef.current, settingsRef.current.prefs);
             if (cancelled) return;
+            onSessionSavedRef.current?.();
             s = autoStart ? enterBreakAfterFocus(s) : enterBreakPausedAfterFocus(s);
           } catch (e) {
             if (cancelled) return;
@@ -371,14 +431,7 @@ export function PomodoroTimerProvider({
       if (handlingEndRef.current || submittingRef.current) return;
 
       if (prev.phase === 'break') {
-        onBreakCompletedFx();
-        const autoStart = settingsRef.current.prefs.autoStartSessions;
-        const next = autoStart ? enterFocusRunning(prev) : enterIdleFocusFull(prev);
-        setSnap(next);
-        persist(next);
-        if (autoStart && settingsRef.current.prefs.soundEffects) {
-          queueMicrotask(() => playTimerChime('start'));
-        }
+        void finalizeBreakEnd(prev);
         return;
       }
 
@@ -388,7 +441,7 @@ export function PomodoroTimerProvider({
     }, 250);
 
     return () => window.clearInterval(id);
-  }, [finalizeFocusEnd, persist, onBreakCompletedFx]);
+  }, [finalizeFocusEnd, finalizeBreakEnd]);
 
   const displaySeconds = useMemo(() => {
     void tick;
@@ -448,6 +501,10 @@ export function PomodoroTimerProvider({
       let left = prev.remainingSeconds <= 0 ? fullBreak : prev.remainingSeconds;
       if (left === 0) left = fullBreak;
 
+      if (!breakStartedAtRef.current) {
+        breakStartedAtRef.current = new Date(now - (fullBreak - left) * 1000).toISOString();
+      }
+
       const next: PomodoroTimerSnapshot = {
         ...prev,
         remainingSeconds: left,
@@ -481,6 +538,7 @@ export function PomodoroTimerProvider({
 
   const skipBreak = useCallback(() => {
     setSubmitError(null);
+    breakStartedAtRef.current = null;
     onBreakCompletedFx();
     setSnap((prev) => {
       const now = Date.now();
@@ -516,6 +574,8 @@ export function PomodoroTimerProvider({
       activeBreakMinutes: snap.activeBreakMinutes,
       nextBreakIsLong,
       autoStartSessions: settingsRef.current.prefs.autoStartSessions,
+      selectedTaskId,
+      setSelectedTaskId,
       startPause,
       reset,
       skipBreak,
@@ -534,6 +594,7 @@ export function PomodoroTimerProvider({
       snap.activeBreakMinutes,
       nextBreakIsLong,
       prefs.autoStartSessions,
+      selectedTaskId,
       running,
       submitting,
       submitError,

@@ -33,6 +33,11 @@ const sessionSchema = new mongoose.Schema(
       default: 0,
       min: 0,
     },
+    taskId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Task',
+      default: null,
+    },
   },
   {
     timestamps: true,

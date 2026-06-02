@@ -1,0 +1,26 @@
+services:
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  api:
+    build: ./backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: 5000
+      HOST: 0.0.0.0
+      MONGO_URI: mongodb://mongo:27017/pomodoria
+      JWT_SECRET: change-me-in-production-min-32-chars-long
+      JWT_REFRESH_SECRET: change-me-refresh-secret-min-32-chars
+      APP_PUBLIC_URL: http://localhost:5173
+    depends_on:
+      - mongo
+
+volumes:
+  mongo_data:

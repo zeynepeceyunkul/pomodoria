@@ -37,8 +37,11 @@ const startServer = async () => {
     });
 
     server.listen(PORT, HOST, () => {
+      const { getApiPublicUrl, getPublicAppUrl } = require('./utils/publicUrls');
       console.log(`[SERVER] Listening on http://${HOST}:${PORT}`);
       console.log(`[SERVER] Health check: GET http://127.0.0.1:${PORT}/health`);
+      console.log(`[SERVER] Email open links base: ${getApiPublicUrl()}/open/...`);
+      console.log(`[SERVER] Web app URL (APP_PUBLIC_URL): ${getPublicAppUrl()}`);
     });
 
     const shutdown = (signal) => {

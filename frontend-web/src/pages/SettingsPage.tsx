@@ -2,11 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { AuthHttpError } from '../api/http';
-import { getMe, putSettings } from '../api/users';
+import { getMe, patchProfile, putSettings } from '../api/users';
 import type { SettingsResponse, UserSettingsEmbedded } from '../api/users';
 import { logoutRequest } from '../api/auth';
 import { clearStoredToken, getStoredRefreshToken } from '../auth/token';
 import { applyHtmlTheme } from '../lib/theme';
+import { readAvatarDataUri } from '../lib/avatarImage';
 import { ensureNotifyPermission } from '../lib/timerFx';
 import type { AppOutletContext } from '../layout/outletContext';
 import styles from './SettingsPage.module.css';
@@ -127,7 +128,7 @@ function snapshotFromResponse(r: SettingsResponse): Snapshot {
 
 export function SettingsPage() {
   const navigate = useNavigate();
-  const { refreshMe } = useOutletContext<AppOutletContext>();
+  const { me, refreshMe } = useOutletContext<AppOutletContext>();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -148,6 +149,9 @@ export function SettingsPage() {
   const [achievementNotifs, setAchievementNotifs] = useState(true);
   const [soundEffects, setSoundEffects] = useState(false);
   const [autoStartSessions, setAutoStartSessions] = useState(true);
+  const [displayName, setDisplayName] = useState('');
+  const [avatarUri, setAvatarUri] = useState<string | null>(null);
+  const avatarInitialRef = useRef<string | null>(null);
 
   const applySnapshot = useCallback(() => {
     const s = snapshotRef.current;
@@ -169,6 +173,9 @@ export function SettingsPage() {
     setLoadError(null);
     try {
       const profile = await getMe();
+      setDisplayName(profile.name ?? '');
+      setAvatarUri(profile.avatar ?? null);
+      avatarInitialRef.current = profile.avatar ?? null;
       const snap = normalizeEmbedded(profile.settings);
       snapshotRef.current = snap;
       applySnapshot();
@@ -224,6 +231,15 @@ export function SettingsPage() {
       applySnapshot();
       applyHtmlTheme(snap.theme);
       await refreshMe();
+      if (displayName.trim() && displayName.trim() !== me?.name) {
+        await patchProfile({ name: displayName.trim() });
+        await refreshMe();
+      }
+      if (avatarUri !== avatarInitialRef.current) {
+        await patchProfile({ avatar: avatarUri });
+        avatarInitialRef.current = avatarUri;
+        await refreshMe();
+      }
       setSuccessMsg('Settings saved.');
     } catch (e) {
       if (e instanceof AuthHttpError && e.status === 401) {
@@ -240,6 +256,19 @@ export function SettingsPage() {
     applySnapshot();
     setSaveError(null);
     setSuccessMsg(null);
+    setAvatarUri(avatarInitialRef.current);
+  }
+
+  async function handleAvatarPick(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const uri = await readAvatarDataUri(file);
+      setAvatarUri(uri);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Could not load image.');
+    }
   }
 
   async function handleSignOut() {
@@ -332,10 +361,6 @@ export function SettingsPage() {
               <p className={styles.toggleTitle} id="tog-auto-start-title">
                 Auto-start sessions
               </p>
-              <p className={styles.toggleDesc}>
-                When on, focus and breaks start automatically in a chain ({sessionsUntilLongBreak} focus rounds,
-                then a long break). When off, press Start for each focus or break.
-              </p>
             </div>
             <Toggle
               checked={autoStartSessions}
@@ -361,7 +386,6 @@ export function SettingsPage() {
               <p className={styles.toggleTitle} id="tog-session-title">
                 Session Reminders
               </p>
-              <p className={styles.toggleDesc}>Notify when a break ends — time to focus again</p>
             </div>
             <Toggle
               checked={sessionReminders}
@@ -375,7 +399,6 @@ export function SettingsPage() {
               <p className={styles.toggleTitle} id="tog-break-title">
                 Break Reminders
               </p>
-              <p className={styles.toggleDesc}>Notify when a focus session completes — take a break</p>
             </div>
             <Toggle checked={breakReminders} onChange={setBreakReminders} labelledBy="tog-break-title" />
           </div>
@@ -385,7 +408,6 @@ export function SettingsPage() {
               <p className={styles.toggleTitle} id="tog-ach-title">
                 Achievement Notifications
               </p>
-              <p className={styles.toggleDesc}>Notify when a session is saved (progress / XP updated)</p>
             </div>
             <Toggle
               checked={achievementNotifs}
@@ -399,7 +421,6 @@ export function SettingsPage() {
               <p className={styles.toggleTitle} id="tog-sound-title">
                 Sound Effects
               </p>
-              <p className={styles.toggleDesc}>Short chime when the timer starts or a segment ends</p>
             </div>
             <Toggle checked={soundEffects} onChange={setSoundEffects} labelledBy="tog-sound-title" />
           </div>
@@ -438,6 +459,44 @@ export function SettingsPage() {
           <h2 id="account-heading" className={styles.cardHead}>
             Account
           </h2>
+          <div className={styles.field}>
+            <span className={styles.label}>Profile photo</span>
+            <div className={styles.avatarRow}>
+              <div className={styles.avatarPreview} aria-hidden>
+                {avatarUri ? (
+                  <img src={avatarUri} alt="" className={styles.avatarImg} />
+                ) : (
+                  <span className={styles.avatarFallback}>
+                    {(displayName.trim()[0] ?? me?.name?.[0] ?? 'U').toUpperCase()}
+                  </span>
+                )}
+              </div>
+              <div className={styles.avatarActions}>
+                <label className={styles.avatarUploadBtn}>
+                  Choose photo
+                  <input type="file" accept="image/*" className={styles.avatarFileInput} onChange={handleAvatarPick} />
+                </label>
+                {avatarUri ? (
+                  <button type="button" className={styles.avatarRemoveBtn} onClick={() => setAvatarUri(null)}>
+                    Remove
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          </div>
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="setting-name">
+              Display name
+            </label>
+            <input
+              id="setting-name"
+              className={styles.numberInput}
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              maxLength={32}
+              autoComplete="name"
+            />
+          </div>
           <p className={styles.fieldHint}>Sign out on this device. You can sign in again anytime.</p>
           <button type="button" className={styles.btnSignOut} onClick={handleSignOut}>
             Sign out

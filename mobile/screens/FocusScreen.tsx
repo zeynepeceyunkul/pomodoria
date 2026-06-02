@@ -1,14 +1,17 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radii } from '../constants/theme';
+import { radii } from '../constants/theme';
 import { Card } from '../components/Card';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { SecondaryButton } from '../components/SecondaryButton';
 import { useFocusTimer } from '../context/FocusTimerContext';
 import { useAuth } from '../context/AuthContext';
 import { useTabContentPadding } from '../hooks/useTabContentPadding';
+import { useThemedStyles } from '../hooks/useThemedStyles';
+import type { ThemeColors } from '../hooks/useThemeColors';
 import { xpIntoCurrentLevel, xpThresholdForCurrentTier, XP_PER_LEVEL } from '../lib/xpDisplay';
+import { getMyTasks, type TaskRecord } from '../services/tasks';
 
 function formatClock(totalSec: number): string {
   const mm = Math.floor(totalSec / 60);
@@ -17,24 +20,29 @@ function formatClock(totalSec: number): string {
 }
 
 export function FocusScreen() {
+  const styles = useThemedStyles(createFocusStyles);
   const { user } = useAuth();
   const bottomPad = useTabContentPadding(24);
-  const {
-    focusMinutes,
-    remainingSec,
-    isRunning,
-    submitting,
-    error,
-    toggle,
-    reset,
-    clearError,
-  } = useFocusTimer();
+  const t = useFocusTimer();
+  const [openTasks, setOpenTasks] = useState<TaskRecord[]>([]);
 
-  const totalSec = Math.max(1, focusMinutes) * 60;
-  const primary = isRunning
+  useEffect(() => {
+    void getMyTasks()
+      .then((list) => setOpenTasks(list.filter((task) => task.status !== 'completed')))
+      .catch(() => setOpenTasks([]));
+  }, []);
+
+  const totalSec =
+    t.phase === 'focus'
+      ? Math.max(1, t.focusMinutes) * 60
+      : Math.max(1, t.activeBreakMinutes) * 60;
+
+  const primary = t.isRunning
     ? 'Pause'
-    : remainingSec <= 0 || remainingSec === totalSec
-      ? 'Start'
+    : t.remainingSec <= 0 || t.remainingSec === totalSec
+      ? t.phase === 'focus'
+        ? 'Start Focus'
+        : 'Start Break'
       : 'Resume';
 
   const xpLine = useMemo(() => {
@@ -55,20 +63,56 @@ export function FocusScreen() {
         <Text style={styles.pageTitle}>Focus</Text>
 
         <View style={styles.backdrop}>
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>Focus mode</Text>
+          <View style={[styles.badge, t.phase === 'break' && styles.badgeBreak]}>
+            <Text style={[styles.badgeText, t.phase === 'break' && styles.badgeTextBreak]}>
+              {t.phase === 'focus' ? 'Focus mode' : 'Break time'}
+            </Text>
           </View>
 
           <Card style={styles.timerCard}>
-            <Text style={styles.label}>Focus session</Text>
-            <Text style={styles.timer}>{formatClock(remainingSec)}</Text>
+            <Text style={styles.label}>
+              {t.phase === 'focus' ? 'Focus session' : 'Break session'}
+            </Text>
+            <Text style={styles.timer}>{formatClock(t.remainingSec)}</Text>
             <Text style={styles.hint}>
-              Pomodoria rhythm · {focusMinutes} min blocks · tap Start when you are ready
+              {t.phase === 'focus'
+                ? `${t.focusMinutes} min · next: ${t.nextBreakIsLong ? 'long break' : 'short break'}`
+                : `${t.activeBreakMinutes} min`}
             </Text>
 
-            {error ? (
-              <Pressable onPress={clearError} style={styles.alert}>
-                <Text style={styles.alertText}>{error}</Text>
+            {t.phase === 'focus' && openTasks.length > 0 ? (
+              <View style={styles.taskPicker}>
+                <Text style={styles.taskPickerLabel}>Link task (optional)</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.taskChips}>
+                  <Pressable
+                    style={[styles.chip, !t.selectedTaskId && styles.chipActive]}
+                    onPress={() => t.setSelectedTaskId(null)}
+                  >
+                    <Text style={[styles.chipText, !t.selectedTaskId && styles.chipTextActive]}>None</Text>
+                  </Pressable>
+                  {openTasks.map((task) => (
+                    <Pressable
+                      key={task._id}
+                      style={[styles.chip, t.selectedTaskId === task._id && styles.chipActive]}
+                      onPress={() => t.setSelectedTaskId(task._id)}
+                    >
+                      <Text
+                        style={[
+                          styles.chipText,
+                          t.selectedTaskId === task._id && styles.chipTextActive,
+                        ]}
+                      >
+                        {task.title}
+                      </Text>
+                    </Pressable>
+                  ))}
+                </ScrollView>
+              </View>
+            ) : null}
+
+            {t.error ? (
+              <Pressable onPress={t.clearError} style={styles.alert}>
+                <Text style={styles.alertText}>{t.error}</Text>
                 <Text style={styles.alertDismiss}>Tap to dismiss</Text>
               </Pressable>
             ) : null}
@@ -76,20 +120,30 @@ export function FocusScreen() {
             <View style={styles.rowActions}>
               <View style={styles.primaryWrap}>
                 <PrimaryButton
-                  label={submitting ? 'Saving…' : primary}
-                  onPress={toggle}
-                  disabled={submitting}
-                  loading={submitting}
+                  label={t.submitting ? 'Saving…' : primary}
+                  onPress={t.toggle}
+                  disabled={t.submitting}
+                  loading={t.submitting}
                 />
               </View>
               <SecondaryButton
                 label="Reset"
-                onPress={reset}
-                disabled={submitting}
+                onPress={t.reset}
+                disabled={t.submitting}
                 style={styles.resetBtn}
               />
             </View>
-            <Text style={styles.tip}>Reset clears the round without saving. Pause keeps your place.</Text>
+            {t.phase === 'break' ? (
+              <SecondaryButton
+                label="Skip to focus"
+                onPress={t.skipBreak}
+                disabled={t.submitting}
+                style={styles.skipBtn}
+              />
+            ) : null}
+            {t.phase === 'break' && !t.autoStartSessions ? (
+              <Text style={styles.tip}>Press Start Focus when you&apos;re ready.</Text>
+            ) : null}
           </Card>
         </View>
 
@@ -112,122 +166,148 @@ export function FocusScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  scroll: { paddingHorizontal: 18, paddingTop: 8 },
-  pageTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: colors.text,
-    marginBottom: 14,
-  },
-  backdrop: {
-    backgroundColor: colors.focusBg,
-    borderRadius: radii.card,
-    borderWidth: 1,
-    borderColor: colors.focusBgDeep,
-    padding: 16,
-    marginBottom: 16,
-  },
-  badge: {
-    alignSelf: 'center',
-    backgroundColor: colors.focusBadgeBg,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: radii.pill,
-    marginBottom: 14,
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.focusBadgeText,
-    letterSpacing: 0.3,
-  },
-  timerCard: {
-    alignItems: 'stretch',
-    backgroundColor: colors.surface,
-  },
-  label: {
-    textAlign: 'center',
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.textMuted,
-    marginBottom: 12,
-  },
-  timer: {
-    textAlign: 'center',
-    fontSize: 52,
-    fontWeight: '700',
-    color: colors.primary,
-    marginBottom: 8,
-  },
-  hint: {
-    textAlign: 'center',
-    fontSize: 14,
-    color: colors.textSoft,
-    marginBottom: 22,
-    lineHeight: 20,
-  },
-  rowActions: {
-    flexDirection: 'row',
-    alignItems: 'stretch',
-  },
-  primaryWrap: {
-    flex: 2,
-    marginRight: 10,
-    justifyContent: 'center',
-  },
-  resetBtn: {
-    flex: 1,
-    minWidth: 0,
-    alignSelf: 'stretch',
-    justifyContent: 'center',
-  },
-  tip: {
-    marginTop: 12,
-    fontSize: 13,
-    color: colors.textSoft,
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-  alert: {
-    backgroundColor: colors.errorBg,
-    borderWidth: 1,
-    borderColor: colors.errorBorder,
-    borderRadius: radii.sm,
-    padding: 12,
-    marginBottom: 14,
-  },
-  alertText: { color: colors.errorText, fontSize: 14, textAlign: 'center' },
-  alertDismiss: {
-    color: colors.textMuted,
-    fontSize: 12,
-    textAlign: 'center',
-    marginTop: 6,
-  },
-  xpCard: { marginBottom: 8 },
-  xpTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 10,
-  },
-  xpHead: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  xpSub: { fontSize: 14, fontWeight: '600', color: colors.textMuted },
-  xpVal: { fontSize: 14, fontWeight: '700', color: colors.textSecondary },
-  track: {
-    height: 10,
-    borderRadius: radii.pill,
-    backgroundColor: colors.track,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: '100%',
-    borderRadius: radii.pill,
-    backgroundColor: colors.primaryMid,
-  },
-});
+const createFocusStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: c.background },
+    scroll: { paddingHorizontal: 18, paddingTop: 8 },
+    pageTitle: {
+      fontSize: 22,
+      fontWeight: '800',
+      color: c.text,
+      marginBottom: 14,
+    },
+    backdrop: {
+      backgroundColor: c.focusBg,
+      borderRadius: radii.card,
+      borderWidth: 1,
+      borderColor: c.focusBgDeep,
+      padding: 16,
+      marginBottom: 16,
+    },
+    badge: {
+      alignSelf: 'center',
+      backgroundColor: c.focusBadgeBg,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      borderRadius: radii.pill,
+      marginBottom: 14,
+    },
+    badgeBreak: {
+      backgroundColor: c.breakBadgeBg,
+    },
+    badgeText: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: c.focusBadgeText,
+      letterSpacing: 0.3,
+    },
+    badgeTextBreak: {
+      color: c.breakBadgeText,
+    },
+    timerCard: {
+      alignItems: 'stretch',
+      backgroundColor: c.surface,
+    },
+    label: {
+      textAlign: 'center',
+      fontSize: 15,
+      fontWeight: '600',
+      color: c.textMuted,
+      marginBottom: 12,
+    },
+    timer: {
+      textAlign: 'center',
+      fontSize: 52,
+      fontWeight: '700',
+      color: c.text,
+      marginBottom: 8,
+    },
+    hint: {
+      textAlign: 'center',
+      fontSize: 14,
+      color: c.textSoft,
+      marginBottom: 16,
+      lineHeight: 20,
+    },
+    taskPicker: { marginBottom: 14 },
+    taskPickerLabel: { fontSize: 13, fontWeight: '600', color: c.textMuted, marginBottom: 8 },
+    taskChips: { flexGrow: 0 },
+    chip: {
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: radii.pill,
+      backgroundColor: c.miniBg,
+      borderWidth: 1,
+      borderColor: c.miniBorder,
+      marginRight: 8,
+    },
+    chipActive: {
+      backgroundColor: c.primary,
+      borderColor: c.primary,
+    },
+    chipText: { fontSize: 13, fontWeight: '600', color: c.textSecondary },
+    chipTextActive: { color: c.onPrimary },
+    rowActions: {
+      flexDirection: 'row',
+      alignItems: 'stretch',
+    },
+    primaryWrap: {
+      flex: 2,
+      marginRight: 10,
+      justifyContent: 'center',
+    },
+    resetBtn: {
+      flex: 1,
+      minWidth: 0,
+      alignSelf: 'stretch',
+      justifyContent: 'center',
+    },
+    skipBtn: { marginTop: 10 },
+    tip: {
+      marginTop: 12,
+      fontSize: 13,
+      color: c.textSoft,
+      textAlign: 'center',
+      lineHeight: 18,
+    },
+    alert: {
+      backgroundColor: c.errorBg,
+      borderWidth: 1,
+      borderColor: c.errorBorder,
+      borderRadius: radii.sm,
+      padding: 12,
+      marginBottom: 14,
+    },
+    alertText: { color: c.errorText, fontSize: 14, textAlign: 'center' },
+    alertDismiss: {
+      color: c.textMuted,
+      fontSize: 12,
+      textAlign: 'center',
+      marginTop: 6,
+    },
+    xpCard: { marginBottom: 8 },
+    xpTitle: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: c.text,
+      marginBottom: 10,
+    },
+    xpHead: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 8,
+    },
+    xpSub: { fontSize: 14, fontWeight: '600', color: c.textMuted },
+    xpVal: { fontSize: 14, fontWeight: '700', color: c.textSecondary },
+    track: {
+      height: 10,
+      borderRadius: radii.pill,
+      backgroundColor: c.track,
+      overflow: 'hidden',
+    },
+    fill: {
+      height: '100%',
+      borderRadius: radii.pill,
+      backgroundColor: c.primary,
+    },
+  });

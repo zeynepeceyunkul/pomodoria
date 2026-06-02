@@ -1,17 +1,22 @@
+import { useMemo } from 'react';
 import { StyleSheet, Text } from 'react-native';
-import { colors } from '../constants/theme';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 type Props = { children: string };
 
 export function SectionTitle({ children }: Props) {
+  const c = useThemeColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        t: {
+          fontSize: 18,
+          fontWeight: '700',
+          color: c.text,
+          marginBottom: 16,
+        },
+      }),
+    [c],
+  );
   return <Text style={styles.t}>{children}</Text>;
 }
-
-const styles = StyleSheet.create({
-  t: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 16,
-  },
-});

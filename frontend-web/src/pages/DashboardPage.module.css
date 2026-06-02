@@ -30,7 +30,7 @@
 }
 
 .card {
-  background: #ffffff;
+  background: var(--pom-surface);
   border-radius: 14px;
   padding: 28px 26px;
   box-shadow:
@@ -42,7 +42,7 @@
   margin: 0 0 20px;
   font-size: 1.125rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--pom-text);
 }
 
 .profileAvatar {
@@ -50,8 +50,8 @@
   height: 112px;
   margin: 0 auto 16px;
   border-radius: 999px;
-  background: #583d5a;
-  color: #ffffff;
+  background: var(--pom-primary);
+  color: var(--pom-on-primary);
   font-size: 2.5rem;
   font-weight: 600;
   display: flex;
@@ -64,7 +64,7 @@
   text-align: center;
   font-size: 1.0625rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--pom-text);
 }
 
 .profileLevel {
@@ -72,15 +72,9 @@
   text-align: center;
   font-size: 1.125rem;
   font-weight: 700;
-  color: #583d5a;
+  color: var(--pom-highlight);
 }
 
-.profileSub {
-  margin: 0;
-  text-align: center;
-  font-size: 0.9375rem;
-  color: #9ca3af;
-}
 
 .progressHead {
   display: flex;
@@ -93,27 +87,27 @@
 .progressHeadLeft {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--pom-text-secondary);
 }
 
 .progressHeadRight {
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--pom-text-muted);
   font-variant-numeric: tabular-nums;
 }
 
 .track {
   height: 10px;
   border-radius: 999px;
-  background: #ede9fe;
+  background: var(--pom-track);
   overflow: hidden;
 }
 
 .fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, #583d5a, #7c5f82);
+  background: linear-gradient(90deg, var(--pom-primary), var(--pom-primary-mid));
   transition: width 0.35s ease;
 }
 
@@ -135,13 +129,13 @@
   margin: 0;
   font-size: 0.9375rem;
   font-weight: 700;
-  color: #374151;
+  color: var(--pom-text-secondary);
 }
 
 .streakTextSub {
   margin: 2px 0 0;
   font-size: 0.8125rem;
-  color: #9ca3af;
+  color: var(--pom-text-soft);
 }
 
 .todayGrid {
@@ -158,8 +152,8 @@
 
 .miniCard {
   position: relative;
-  background: #fafafa;
-  border: 1px solid #f3f4f6;
+  background: var(--pom-surface-muted);
+  border: 1px solid var(--pom-bg);
   border-radius: 12px;
   padding: 18px 16px 16px;
 }
@@ -168,7 +162,7 @@
   position: absolute;
   top: 14px;
   right: 14px;
-  color: #583d5a;
+  color: var(--pom-highlight);
   opacity: 0.85;
 }
 
@@ -176,21 +170,21 @@
   margin: 0 0 8px;
   font-size: 0.8125rem;
   font-weight: 600;
-  color: #9ca3af;
+  color: var(--pom-text-soft);
 }
 
 .miniValue {
   margin: 0 0 6px;
   font-size: 1.75rem;
   font-weight: 700;
-  color: #583d5a;
+  color: var(--pom-highlight);
   font-variant-numeric: tabular-nums;
 }
 
 .miniSub {
   margin: 0;
   font-size: 0.8125rem;
-  color: #9ca3af;
+  color: var(--pom-text-soft);
 }
 
 .statList {
@@ -204,7 +198,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 14px 0;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid var(--pom-bg);
   font-size: 0.9375rem;
 }
 
@@ -218,12 +212,12 @@
 }
 
 .statLabel {
-  color: #6b7280;
+  color: var(--pom-text-muted);
 }
 
 .statValue {
   font-weight: 700;
-  color: #1f2937;
+  color: var(--pom-text);
   font-variant-numeric: tabular-nums;
 }
 
@@ -236,13 +230,13 @@
 
 .aiHighlight {
   font-weight: 600;
-  color: #583d5a;
+  color: var(--pom-highlight);
 }
 
 .loading {
   padding: 48px;
   text-align: center;
-  color: #6b7280;
+  color: var(--pom-text-muted);
 }
 
 .errorBox {
@@ -253,10 +247,10 @@
 
 .errorInner {
   padding: 16px 18px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
+  background: var(--pom-error-bg);
+  border: 1px solid var(--pom-error-border);
   border-radius: 10px;
-  color: #991b1b;
+  color: var(--pom-error-text);
   font-size: 0.9375rem;
 }
 
@@ -265,8 +259,8 @@
   padding: 8px 14px;
   font-family: inherit;
   font-weight: 600;
-  color: #ffffff;
-  background: #583d5a;
+  color: var(--pom-on-primary);
+  background: var(--pom-primary);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -279,5 +273,59 @@
 
 .trophyIcon {
   flex-shrink: 0;
-  color: #583d5a;
+  color: var(--pom-highlight);
+}
+
+.tasksHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.tasksHead .cardTitle {
+  margin: 0;
+}
+
+.tasksLink {
+  border: none;
+  background: none;
+  color: var(--pom-highlight);
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.tasksEmpty {
+  margin: 0;
+  color: var(--pom-text-muted);
+  font-size: 0.9375rem;
+}
+
+.tasksList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tasksItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f9fafb;
+  font-size: 0.9375rem;
+}
+
+.tasksPriority {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  color: var(--pom-highlight);
 }

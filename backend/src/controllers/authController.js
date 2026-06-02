@@ -4,13 +4,16 @@ const Settings = require('../models/Settings');
 const {
   validateRegisterBody,
   validateLoginBody,
+  validatePassword,
   isValidEmail,
 } = require('../utils/authValidation');
 const { hashToken, generateSecureToken } = require('../utils/tokenHash');
 const { signAccessToken, signRefreshToken, verifyRefreshToken } = require('../utils/jwt');
 const {
   sendVerificationEmail,
+  sendPasswordResetEmail,
   VERIFICATION_EXPIRY_HOURS,
+  PASSWORD_RESET_EXPIRY_HOURS,
   isSmtpConfigured,
 } = require('../services/emailService');
 
@@ -22,7 +25,10 @@ const withVerificationMeta = (payload, emailResult) => {
   }
   if (emailResult?.devLink && process.env.NODE_ENV !== 'production') {
     next.emailDelivered = false;
-    next.devVerificationUrl = emailResult.devLink;
+    next.devVerificationUrl = emailResult.devMobileLink || emailResult.devLink;
+    if (emailResult.devMobileLink && emailResult.devLink) {
+      next.devWebUrl = emailResult.devLink;
+    }
     next.message =
       (next.message ? `${next.message} ` : '') +
       'SMTP is not configured — use the verification link shown below (development only).';
@@ -329,6 +335,90 @@ const logout = async (req, res) => {
   }
 };
 
+const FORGOT_PASSWORD_MESSAGE =
+  'If that email is registered, a password reset link was sent.';
+
+const forgotPassword = async (req, res) => {
+  try {
+    const email = typeof req.body.email === 'string' ? req.body.email.trim() : '';
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ message: 'A valid email is required.' });
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (user && isEmailVerified(user)) {
+      const rawToken = generateSecureToken();
+      user.passwordResetTokenHash = hashToken(rawToken);
+      user.passwordResetExpires = new Date(
+        Date.now() + PASSWORD_RESET_EXPIRY_HOURS * 60 * 60 * 1000,
+      );
+      await user.save();
+      const emailResult = await sendPasswordResetEmail(user.email, rawToken);
+      return res.status(200).json(
+        withVerificationMeta({ message: FORGOT_PASSWORD_MESSAGE }, emailResult),
+      );
+    }
+
+    return res.status(200).json({ message: FORGOT_PASSWORD_MESSAGE });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    return res.status(500).json({ message: 'Server error during password reset request' });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const rawToken =
+      (typeof req.body?.token === 'string' && req.body.token.trim()) ||
+      (typeof req.query?.token === 'string' && req.query.token.trim()) ||
+      '';
+    const password = req.body?.password;
+
+    if (!rawToken) {
+      return res.status(400).json({ message: 'Reset token is required.' });
+    }
+
+    const passwordError = validatePassword(password);
+    if (passwordError) {
+      return res.status(400).json({ message: passwordError });
+    }
+
+    const tokenHash = hashToken(rawToken);
+    const user = await User.findOne({ passwordResetTokenHash: tokenHash });
+
+    if (!user) {
+      return res.status(400).json({
+        message: 'Invalid or expired reset link. Request a new one.',
+        code: 'RESET_INVALID',
+      });
+    }
+
+    if (user.passwordResetExpires && user.passwordResetExpires <= new Date()) {
+      return res.status(400).json({
+        message: 'Reset link has expired. Request a new one.',
+        code: 'RESET_EXPIRED',
+        email: user.email,
+      });
+    }
+
+    const salt = await bcrypt.genSalt(12);
+    user.password = await bcrypt.hash(password, salt);
+    user.passwordResetTokenHash = null;
+    user.passwordResetExpires = null;
+    user.refreshTokenHash = null;
+    user.refreshTokenExpires = null;
+    await user.save();
+
+    return res.status(200).json({
+      message: 'Password updated. You can sign in with your new password.',
+      email: user.email,
+    });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    return res.status(500).json({ message: 'Server error during password reset' });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -336,4 +426,6 @@ module.exports = {
   resendVerification,
   refresh,
   logout,
+  forgotPassword,
+  resetPassword,
 };

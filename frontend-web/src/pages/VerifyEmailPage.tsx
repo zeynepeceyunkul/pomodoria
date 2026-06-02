@@ -23,7 +23,7 @@ export function VerifyEmailPage() {
         const res = await verifyEmailRequest(token);
         if (cancelled) return;
         setStatus('success');
-        setMessage(res.message);
+        setMessage(res.message ?? 'Email verified! You can sign in now.');
         window.setTimeout(
           () =>
             navigate('/login', {

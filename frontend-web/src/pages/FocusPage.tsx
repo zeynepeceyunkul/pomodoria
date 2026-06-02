@@ -1,4 +1,7 @@
+import { useEffect, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { getMyTasks } from '../api/tasks';
+import type { TaskRecord } from '../api/tasks';
 import { usePomodoroTimer } from '../timer/PomodoroTimerContext';
 import type { AppOutletContext } from '../layout/outletContext';
 import styles from './FocusPage.module.css';
@@ -12,6 +15,14 @@ function formatClock(totalSec: number): string {
 export function FocusPage() {
   const { me, loadingProfile } = useOutletContext<AppOutletContext>();
   const t = usePomodoroTimer();
+  const [openTasks, setOpenTasks] = useState<TaskRecord[]>([]);
+
+  useEffect(() => {
+    if (!me) return;
+    void getMyTasks()
+      .then((list) => setOpenTasks(list.filter((task) => task.status !== 'completed')))
+      .catch(() => setOpenTasks([]));
+  }, [me]);
 
   const fm = t.focusMinutesSetting;
   const bm = t.breakMinutesSetting;
@@ -56,6 +67,23 @@ export function FocusPage() {
         <div className={t.phase === 'focus' ? styles.badge : styles.badgeBreak}>
           {t.phase === 'focus' ? 'FOCUS MODE' : 'BREAK TIME'}
         </div>
+        {t.phase === 'focus' && openTasks.length > 0 ? (
+          <label className={styles.taskSelectWrap}>
+            Link to task (optional)
+            <select
+              className={styles.taskSelect}
+              value={t.selectedTaskId ?? ''}
+              onChange={(e) => t.setSelectedTaskId(e.target.value || null)}
+            >
+              <option value="">No task</option>
+              {openTasks.map((task) => (
+                <option key={task._id} value={task._id}>
+                  {task.title}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
         <p className={styles.timer} aria-live="polite">
           {formatClock(t.displaySeconds)}
         </p>
@@ -80,31 +108,11 @@ export function FocusPage() {
             </button>
           ) : null}
         </div>
-        <p className={styles.footer}>
-          {t.phase === 'focus' ? (
-            <>Stay focused for {fm} minutes to earn 50 XP</>
-          ) : t.autoStartSessions ? (
-            <>
-              Step away for {t.activeBreakMinutes || bm} minutes — the next focus session will start automatically when
-              this break ends.
-            </>
-          ) : (
-            <>
-              Step away for {t.activeBreakMinutes || bm} minutes, then press <em>Start Focus</em> when you are ready.
-            </>
-          )}
-        </p>
-        <p className={styles.metaMuted}>
-          Timer persists while you navigate. Short break {bm}m · Long break {t.longBreakMinutesSetting}m after every{' '}
-          {t.sessionsUntilLongBreakSetting} focus sessions
-          {t.phase === 'focus' ? (
-            <>
-              {' '}
-              (next break: {t.nextBreakIsLong ? 'long' : 'short'})
-            </>
-          ) : null}
-          .
-        </p>
+        {t.phase === 'break' && !t.autoStartSessions ? (
+          <p className={styles.footer}>
+            Break {t.activeBreakMinutes || bm}m · press <em>Start Focus</em> when ready.
+          </p>
+        ) : null}
         {t.submitError ? (
           <div className={styles.alert} role="alert">
             <p>{t.submitError}</p>

@@ -1,0 +1,232 @@
+.wrap {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 28px 22px 48px;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.title {
+  margin: 0 0 6px;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--pom-text);
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--pom-text-muted);
+}
+
+.addBtn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 18px;
+  background: var(--pom-primary);
+  color: var(--pom-on-primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.filterBtn,
+.filterActive {
+  border: 1px solid var(--pom-border);
+  border-radius: 999px;
+  padding: 6px 14px;
+  background: var(--pom-surface);
+  cursor: pointer;
+  text-transform: capitalize;
+}
+
+.filterActive {
+  background: var(--pom-primary);
+  border-color: var(--pom-highlight);
+  color: var(--pom-on-primary);
+}
+
+.error {
+  color: #b91c1c;
+  margin-bottom: 16px;
+}
+
+.form {
+  background: var(--pom-surface);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 16px rgb(0 0 0 / 6%);
+}
+
+.formTitle {
+  margin: 0 0 16px;
+  font-size: 1.125rem;
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--pom-text-secondary);
+}
+
+.input,
+.textarea,
+.statusSelect {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .formRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.cancelBtn,
+.saveBtn,
+.completeBtn,
+.editBtn,
+.deleteBtn {
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+}
+
+.cancelBtn {
+  background: var(--pom-btn-secondary-bg);
+  color: var(--pom-btn-secondary-text);
+  border: 1px solid var(--pom-border);
+}
+
+.saveBtn,
+.completeBtn {
+  background: var(--pom-primary);
+  color: var(--pom-on-primary);
+}
+
+.editBtn {
+  background: var(--pom-btn-secondary-bg);
+  color: var(--pom-btn-secondary-text);
+  border: 1px solid var(--pom-border);
+}
+
+.deleteBtn {
+  background: var(--pom-error-bg);
+  color: var(--pom-error-text);
+  border: 1px solid var(--pom-error-border);
+}
+
+.loading,
+.empty {
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--pom-text-muted);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.item {
+  background: var(--pom-surface);
+  border-radius: 12px;
+  padding: 18px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 5%);
+}
+
+.itemTitle {
+  margin: 0 0 6px;
+  font-weight: 700;
+  color: var(--pom-text);
+}
+
+.itemDesc {
+  margin: 0 0 10px;
+  color: var(--pom-text-muted);
+  font-size: 0.9375rem;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--pom-bg);
+  color: var(--pom-text-secondary);
+  text-transform: capitalize;
+}
+
+.priority_high {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.priority_medium {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.priority_low {
+  background: var(--pom-badge-break-bg);
+  color: var(--pom-badge-break-text);
+}
+
+.due {
+  font-size: 0.8125rem;
+  color: var(--pom-text-soft);
+}
+
+.itemActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}

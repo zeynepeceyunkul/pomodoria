@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radii } from '../constants/theme';
+import { radii } from '../constants/theme';
 import { Card } from '../components/Card';
+import { AIInsightCard } from '../components/AIInsightCard';
 import { SectionTitle } from '../components/SectionTitle';
 import { useTabContentPadding } from '../hooks/useTabContentPadding';
+import { useThemedStyles } from '../hooks/useThemedStyles';
+import type { ThemeColors } from '../hooks/useThemeColors';
 import { formatMinutes } from '../lib/formatMinutes';
+import { buildInsights } from '../lib/insights';
 import { AuthHttpError } from '../services/http';
 import {
   getSessionAnalytics,
@@ -16,6 +20,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 
 export function StatisticsScreen() {
+  const styles = useThemedStyles(createStatisticsStyles);
   const { signOut } = useAuth();
   const bottomPad = useTabContentPadding(24);
   const [stats, setStats] = useState<SessionStatsResponse | null>(null);
@@ -68,6 +73,24 @@ export function StatisticsScreen() {
 
   const maxMinutes = useMemo(() => Math.max(1, ...chartDays.map((d) => d.minutes)), [chartDays]);
 
+  const xpDays = useMemo(() => {
+    const src = analytics?.last30DaysXp;
+    if (!src?.length) return [];
+    return src.slice(-14);
+  }, [analytics]);
+
+  const maxXp = useMemo(() => Math.max(1, ...xpDays.map((d) => d.xpEarned)), [xpDays]);
+
+  const monthlyBars = useMemo(() => analytics?.monthlyFocus ?? [], [analytics]);
+  const maxMonthly = useMemo(
+    () => Math.max(1, ...monthlyBars.map((m) => m.focusMinutes)),
+    [monthlyBars],
+  );
+  const insights = useMemo(
+    () => (stats && analytics ? buildInsights(stats, analytics) : []),
+    [stats, analytics],
+  );
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView
@@ -82,6 +105,16 @@ export function StatisticsScreen() {
         {error ? (
           <Card style={styles.errCard}>
             <Text style={styles.err}>{error}</Text>
+          </Card>
+        ) : null}
+
+        {analytics ? (
+          <Card style={styles.stackBelow}>
+            <SectionTitle>Today</SectionTitle>
+            <View style={styles.todayRow}>
+              <Text style={styles.todayVal}>{formatMinutes(analytics.todayFocusMinutes)}</Text>
+              <Text style={styles.todayLbl}>focus time logged today</Text>
+            </View>
           </Card>
         ) : null}
 
@@ -143,94 +176,128 @@ export function StatisticsScreen() {
             ))}
           </Card>
         ) : null}
+
+        {xpDays.length ? (
+          <Card style={styles.stackBelow}>
+            <SectionTitle>XP earned (last 14 days)</SectionTitle>
+            {xpDays.map((d) => (
+              <View key={d.date} style={styles.barRow}>
+                <Text style={styles.barLabel}>{d.date.slice(5)}</Text>
+                <View style={styles.barTrack}>
+                  <View
+                    style={[styles.barFillXp, { width: `${Math.max(6, (d.xpEarned / maxXp) * 100)}%` }]}
+                  />
+                </View>
+                <Text style={styles.barVal}>{d.xpEarned}</Text>
+              </View>
+            ))}
+          </Card>
+        ) : null}
+
+        {monthlyBars.length ? (
+          <Card style={styles.stackBelow}>
+            <SectionTitle>Focus by month</SectionTitle>
+            {monthlyBars.map((m) => (
+              <View key={m.label} style={styles.barRow}>
+                <Text style={styles.barLabel}>{m.label}</Text>
+                <View style={styles.barTrack}>
+                  <View
+                    style={[
+                      styles.barFill,
+                      { width: `${Math.max(6, (m.focusMinutes / maxMonthly) * 100)}%` },
+                    ]}
+                  />
+                </View>
+                <Text style={styles.barVal}>{m.focusMinutes}m</Text>
+              </View>
+            ))}
+          </Card>
+        ) : null}
+
+        {insights.length ? (
+          <Card style={styles.stackBelow}>
+            <SectionTitle>Insights</SectionTitle>
+            {insights.map((item) => (
+              <AIInsightCard key={item.title} title={item.title} message={item.message} />
+            ))}
+          </Card>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  scroll: { paddingHorizontal: 18 },
-  stackBelow: { marginBottom: 14 },
-  pageTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: colors.text,
-    marginBottom: 8,
-    marginTop: 4,
-  },
-  muted: { color: colors.textMuted, marginBottom: 8 },
-  statCardSpacer: { marginBottom: 14 },
-  rowCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  label: { fontSize: 15, color: colors.textMuted, flex: 1 },
-  value: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colors.primary,
-    marginLeft: 12,
-  },
-  errCard: { borderWidth: 1, borderColor: colors.errorBorder, backgroundColor: colors.errorBg, marginBottom: 12 },
-  err: { color: colors.errorText, fontSize: 14 },
-  streakGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  streakCell: {
-    flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-  },
-  streakVal: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: colors.primary,
-  },
-  streakLbl: {
-    marginTop: 4,
-    fontSize: 13,
-    color: colors.textMuted,
-    fontWeight: '600',
-  },
-  weekdayHint: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginTop: 4,
-  },
-  weekdayEm: { fontWeight: '700', color: colors.primary },
-  barRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  barLabel: {
-    width: 52,
-    fontSize: 12,
-    fontWeight: '700',
-    color: colors.textMuted,
-  },
-  barTrack: {
-    flex: 1,
-    height: 10,
-    borderRadius: radii.pill,
-    backgroundColor: colors.track,
-    overflow: 'hidden',
-    marginHorizontal: 8,
-  },
-  barFill: {
-    height: '100%',
-    borderRadius: radii.pill,
-    backgroundColor: colors.primaryMid,
-  },
-  barVal: {
-    width: 44,
-    textAlign: 'right',
-    fontSize: 13,
-    fontWeight: '700',
-    color: colors.textSecondary,
-  },
-});
+const createStatisticsStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: c.background },
+    scroll: { paddingHorizontal: 18 },
+    stackBelow: { marginBottom: 14 },
+    todayRow: { paddingVertical: 6 },
+    todayVal: { fontSize: 28, fontWeight: '800', color: c.text },
+    todayLbl: { marginTop: 4, fontSize: 14, color: c.textMuted },
+    pageTitle: {
+      fontSize: 22,
+      fontWeight: '800',
+      color: c.text,
+      marginBottom: 8,
+      marginTop: 4,
+    },
+    muted: { color: c.textMuted, marginBottom: 8 },
+    statCardSpacer: { marginBottom: 14 },
+    rowCard: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    label: { fontSize: 15, color: c.textMuted, flex: 1 },
+    value: {
+      fontSize: 17,
+      fontWeight: '700',
+      color: c.text,
+      marginLeft: 12,
+    },
+    errCard: {
+      borderWidth: 1,
+      borderColor: c.errorBorder,
+      backgroundColor: c.errorBg,
+      marginBottom: 12,
+    },
+    err: { color: c.errorText, fontSize: 14 },
+    streakGrid: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      marginBottom: 10,
+    },
+    streakCell: { flex: 1, paddingVertical: 8, paddingHorizontal: 4 },
+    streakVal: { fontSize: 26, fontWeight: '800', color: c.text },
+    streakLbl: { marginTop: 4, fontSize: 13, color: c.textMuted, fontWeight: '600' },
+    weekdayHint: { fontSize: 14, color: c.textSecondary, marginTop: 4 },
+    weekdayEm: { fontWeight: '700', color: c.text },
+    barRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+    barLabel: { width: 52, fontSize: 12, fontWeight: '700', color: c.textMuted },
+    barTrack: {
+      flex: 1,
+      height: 10,
+      borderRadius: radii.pill,
+      backgroundColor: c.track,
+      overflow: 'hidden',
+      marginHorizontal: 8,
+    },
+    barFill: {
+      height: '100%',
+      borderRadius: radii.pill,
+      backgroundColor: c.primary,
+    },
+    barFillXp: {
+      height: '100%',
+      borderRadius: radii.pill,
+      backgroundColor: c.primaryMid,
+    },
+    barVal: {
+      width: 44,
+      textAlign: 'right',
+      fontSize: 13,
+      fontWeight: '700',
+      color: c.textSecondary,
+    },
+  });

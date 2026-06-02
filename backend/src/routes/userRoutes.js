@@ -5,6 +5,8 @@ const {
   getProgress,
   getSettings,
   updateSettings,
+  updateProfile,
+  getAchievements,
 } = require('../controllers/userController');
 
 const router = express.Router();
@@ -17,6 +19,12 @@ router.get('/me', getMe);
 
 // GET /api/users/progress
 router.get('/progress', getProgress);
+
+// GET /api/users/achievements
+router.get('/achievements', getAchievements);
+
+// PATCH /api/users/me
+router.patch('/me', updateProfile);
 
 // GET /api/users/settings
 router.get('/settings', getSettings);

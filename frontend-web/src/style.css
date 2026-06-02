@@ -1,3 +1,5 @@
+@import './theme/palette.css';
+
 *,
 *::before,
 *::after {
@@ -21,53 +23,139 @@ body {
     Arial,
     sans-serif;
   -webkit-font-smoothing: antialiased;
+  background: var(--pom-bg);
+  color: var(--pom-text);
 }
 
 #root {
   min-height: 100%;
 }
 
-/* Theme: Settings → Appearance (applied via `applyHtmlTheme`) */
-html[data-theme='dark'] {
-  color-scheme: dark;
+/* Layout (class names from MainLayout.module.css via :global in TSX or layout classes) */
+.layout-shell {
+  min-height: 100vh;
+  background: var(--pom-bg);
 }
 
-html[data-theme='dark'] body {
-  background: #0f172a;
-  color: #e5e7eb;
+.layout-header {
+  background: var(--pom-header);
+  border-bottom: 1px solid var(--pom-border);
 }
 
-html[data-theme='dark'] .layout-shell {
-  background: #0f172a;
+.layout-logo {
+  color: var(--pom-highlight);
 }
 
-html[data-theme='dark'] .layout-header {
-  background: #1e293b;
-  border-bottom-color: #334155;
-  box-shadow: none;
+.layout-nav-link {
+  color: var(--pom-nav-inactive);
 }
 
-html[data-theme='dark'] .layout-main {
-  background: transparent;
+.layout-nav-link:hover {
+  color: var(--pom-text);
 }
 
-html[data-theme='dark'] .layout-logo {
-  color: #e9d5ff;
+.layout-nav-active {
+  background: var(--pom-primary) !important;
+  color: var(--pom-on-primary) !important;
 }
 
-html[data-theme='dark'] .layout-nav-link {
-  color: #94a3b8;
+.layout-user-name {
+  color: var(--pom-text-secondary);
 }
 
 html[data-theme='dark'] .layout-nav-link:hover {
-  color: #e9d5ff;
+  color: var(--pom-text);
 }
 
-html[data-theme='dark'] .layout-nav-active {
-  background: #7c3aed !important;
-  color: #fafafa !important;
+html[data-theme='dark'] .layout-logo {
+  color: var(--pom-text);
 }
 
-html[data-theme='dark'] .layout-user-name {
-  color: #cbd5e1;
+/* Shared surfaces — targets CSS module class fragments */
+html[data-theme='dark'] [class*='card'],
+html[data-theme='dark'] [class*='Card'],
+html[data-theme='dark'] [class*='panel'],
+html[data-theme='dark'] [class*='tableWrap'],
+html[data-theme='dark'] [class*='formCard'],
+html[data-theme='dark'] [class*='statCard'],
+html[data-theme='dark'] [class*='hero'],
+html[data-theme='dark'] [class*='userMenu'] {
+  background: var(--pom-surface) !important;
+  border-color: var(--pom-border);
+  box-shadow: var(--pom-shadow);
+}
+
+html[data-theme='dark'] [class*='title'],
+html[data-theme='dark'] [class*='pageTitle'],
+html[data-theme='dark'] [class*='cardTitle'],
+html[data-theme='dark'] [class*='profileName'],
+html[data-theme='dark'] [class*='sectionTitle'] {
+  color: var(--pom-text) !important;
+}
+
+html[data-theme='dark'] [class*='subtitle'],
+html[data-theme='dark'] [class*='muted'],
+html[data-theme='dark'] [class*='hint'],
+html[data-theme='dark'] [class*='label']:not([class*='badge']) {
+  color: var(--pom-text-muted) !important;
+}
+
+html[data-theme='dark'] input,
+html[data-theme='dark'] select,
+html[data-theme='dark'] textarea {
+  background: var(--pom-surface-muted) !important;
+  border-color: var(--pom-border) !important;
+  color: var(--pom-text) !important;
+}
+
+html[data-theme='dark'] [class*='root'][class*='Focus'] {
+  background: var(--pom-focus-gradient) !important;
+}
+
+html[data-theme='dark'] table th,
+html[data-theme='dark'] table td {
+  border-color: var(--pom-border) !important;
+  color: var(--pom-text);
+}
+
+html[data-theme='dark'] thead {
+  background: var(--pom-surface-muted) !important;
+}
+
+html[data-theme='dark'] tbody tr {
+  background: var(--pom-surface) !important;
+}
+
+html[data-theme='dark'] tbody tr:hover {
+  background: var(--pom-surface-muted) !important;
+}
+
+/* Action buttons — ensure readable contrast in dark mode */
+html[data-theme='dark'] [class*='startBtn'],
+html[data-theme='dark'] [class*='btnPrimary'],
+html[data-theme='dark'] [class*='saveBtn'],
+html[data-theme='dark'] [class*='completeBtn'],
+html[data-theme='dark'] [class*='retryBtn'],
+html[data-theme='dark'] [class*='start']:where([class*='Btn']) {
+  color: var(--pom-on-primary) !important;
+}
+
+html[data-theme='dark'] [class*='resetBtn'],
+html[data-theme='dark'] [class*='secondaryBtn'],
+html[data-theme='dark'] [class*='btnSecondary'],
+html[data-theme='dark'] [class*='cancelBtn'] {
+  background: var(--pom-btn-secondary-bg) !important;
+  color: var(--pom-btn-secondary-text) !important;
+  border: 1px solid var(--pom-border);
+}
+
+html[data-theme='dark'] [class*='unlockedBadge'],
+html[data-theme='dark'] [class*='badgeFocus'] {
+  background: var(--pom-badge-focus-bg) !important;
+  color: var(--pom-badge-focus-text) !important;
+}
+
+html[data-theme='dark'] [class*='badgeBreak'] {
+  background: var(--pom-badge-break-bg) !important;
+  color: var(--pom-badge-break-text) !important;
 }

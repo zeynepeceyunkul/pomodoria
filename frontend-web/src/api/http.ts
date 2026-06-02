@@ -136,3 +136,26 @@ export async function authPutJson<T>(path: string, body: unknown): Promise<T> {
     throw new Error('Cannot reach the server. Is the API running?');
   }
 }
+
+export async function authPatchJson<T>(path: string, body: unknown): Promise<T> {
+  try {
+    const res = await authFetch(path, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
+    return handleAuthResponse<T>(res);
+  } catch (e) {
+    if (e instanceof AuthHttpError) throw e;
+    throw new Error('Cannot reach the server. Is the API running?');
+  }
+}
+
+export async function authDeleteJson<T>(path: string): Promise<T> {
+  try {
+    const res = await authFetch(path, { method: 'DELETE' });
+    return handleAuthResponse<T>(res);
+  } catch (e) {
+    if (e instanceof AuthHttpError) throw e;
+    throw new Error('Cannot reach the server. Is the API running?');
+  }
+}

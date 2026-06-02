@@ -27,3 +27,6 @@ coverage/
 Thumbs.db
 .idea/
 .vscode/
+
+# E2E credentials (generated locally / in CI)
+frontend-web/e2e/.credentials.json

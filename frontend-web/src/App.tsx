@@ -10,6 +10,9 @@ import { SettingsPage } from './pages/SettingsPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { CheckEmailPage } from './pages/CheckEmailPage';
 import { VerifyEmailPage } from './pages/VerifyEmailPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
+import { TasksPage } from './pages/TasksPage';
 
 export default function App() {
   return (
@@ -18,9 +21,12 @@ export default function App() {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/check-email" element={<CheckEmailPage />} />
       <Route path="/verify-email" element={<VerifyEmailPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
 
       <Route element={<MainLayout />}>
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/tasks" element={<TasksPage />} />
         <Route path="/focus" element={<FocusPage />} />
         <Route path="/statistics" element={<StatisticsPage />} />
         <Route path="/history" element={<HistoryPage />} />

@@ -126,7 +126,7 @@ export function HistoryPage() {
 
       <section className={styles.tableCard} aria-label="Session list">
         {sorted.length === 0 ? (
-          <p className={styles.empty}>No sessions yet. Complete a focus run to see it here.</p>
+          <p className={styles.empty}>No sessions yet.</p>
         ) : (
           <div className={styles.tableScroll}>
             <table className={styles.table}>

@@ -10,16 +10,20 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { colors, radii } from '../constants/theme';
+import { radii } from '../constants/theme';
 import { AIInsightCard } from '../components/AIInsightCard';
+import { CharacterAvatar } from '../components/CharacterAvatar';
 import { Card } from '../components/Card';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { SectionTitle } from '../components/SectionTitle';
 import { useAuth } from '../context/AuthContext';
 import { useFocusTimer } from '../context/FocusTimerContext';
 import { useTabContentPadding } from '../hooks/useTabContentPadding';
+import { useThemedStyles } from '../hooks/useThemedStyles';
+import type { ThemeColors } from '../hooks/useThemeColors';
 import { formatMinutes } from '../lib/formatMinutes';
 import { aggregateSessionRanges } from '../lib/sessionAggregate';
+import { buildCharacterState } from '../lib/characterEvolution';
 import { xpIntoCurrentLevel, xpThresholdForCurrentTier, XP_PER_LEVEL } from '../lib/xpDisplay';
 import type { MainTabParamList } from '../navigation/types';
 import { AuthHttpError } from '../services/http';
@@ -29,6 +33,7 @@ import {
   type SessionRecord,
   type SessionStatsResponse,
 } from '../services/sessions';
+import { getMyTasks, type TaskRecord } from '../services/tasks';
 
 function formatClock(totalSec: number): string {
   const mm = Math.floor(totalSec / 60);
@@ -37,12 +42,14 @@ function formatClock(totalSec: number): string {
 }
 
 export function HomeScreen() {
+  const styles = useThemedStyles(createHomeStyles);
   const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
   const bottomPad = useTabContentPadding(24);
   const { user, refreshUser, signOut } = useAuth();
-  const { remainingSec, isRunning, focusMinutes, toggle } = useFocusTimer();
+  const { remainingSec, isRunning, focusMinutes, phase, toggle } = useFocusTimer();
   const [stats, setStats] = useState<SessionStatsResponse | null>(null);
   const [sessions, setSessions] = useState<SessionRecord[]>([]);
+  const [todayTasks, setTodayTasks] = useState<TaskRecord[]>([]);
   const [loadingStats, setLoadingStats] = useState(false);
   const [loadingSessions, setLoadingSessions] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -67,8 +74,9 @@ export function HomeScreen() {
   const loadSessions = useCallback(async () => {
     setLoadingSessions(true);
     try {
-      const list = await getMySessions();
+      const [list, tasks] = await Promise.all([getMySessions(), getMyTasks({ today: true })]);
       setSessions(Array.isArray(list) ? list : []);
+      setTodayTasks(tasks.filter((t) => t.status !== 'completed').slice(0, 4));
     } catch (e) {
       if (e instanceof AuthHttpError && e.status === 401) {
         await signOut();
@@ -126,6 +134,8 @@ export function HomeScreen() {
     );
   }
 
+  const character = user.character ?? buildCharacterState(user.level ?? 1);
+
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <ScrollView
@@ -137,12 +147,26 @@ export function HomeScreen() {
         <Text style={[styles.pageTitle, styles.stackBelow]}>Dashboard</Text>
 
         <Card style={[styles.profileCard, styles.stackBelow]}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>?</Text>
-          </View>
+          <CharacterAvatar character={character} size="md" />
           <Text style={styles.name}>{user.name}</Text>
-          <Text style={styles.levelLine}>Level {user.level} Warrior</Text>
-          <Text style={styles.sub}>Keep grinding!</Text>
+          <Text style={styles.levelLine}>Level {user.level}</Text>
+        </Card>
+
+        <Card style={styles.stackBelow}>
+          <SectionTitle>Today&apos;s tasks</SectionTitle>
+          {todayTasks.length === 0 ? (
+            <Text style={styles.muted}>No open tasks for today.</Text>
+          ) : (
+            todayTasks.map((task) => (
+              <View key={task._id} style={styles.taskRow}>
+                <Text style={styles.taskTitle}>{task.title}</Text>
+                <Text style={styles.taskPriority}>{task.priority}</Text>
+              </View>
+            ))
+          )}
+          <Pressable onPress={() => navigation.navigate('Tasks')} style={styles.linkRow}>
+            <Text style={styles.linkText}>Manage tasks</Text>
+          </Pressable>
         </Card>
 
         <View style={[styles.summaryRow, styles.stackBelow]}>
@@ -162,7 +186,8 @@ export function HomeScreen() {
           <SectionTitle>Focus timer</SectionTitle>
           <Text style={styles.timerBig}>{formatClock(remainingSec)}</Text>
           <Text style={styles.timerMeta}>
-            {focusMinutes} minute blocks · {isRunning ? 'In progress' : 'Ready when you are'}
+            {phase === 'focus' ? 'Focus' : 'Break'} · {focusMinutes} min blocks ·{' '}
+            {isRunning ? 'In progress' : 'Ready when you are'}
           </Text>
           <PrimaryButton label={timerPrimary} onPress={toggle} style={styles.timerBtn} />
           <Pressable onPress={() => navigation.navigate('Focus')} style={styles.linkRow}>
@@ -209,162 +234,93 @@ export function HomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scroll: {
-    paddingHorizontal: 18,
-  },
-  stackBelow: {
-    marginBottom: 16,
-  },
-  pageTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: colors.text,
-    marginTop: 4,
-  },
-  timerCard: {
-    borderWidth: 1,
-    borderColor: colors.focusBgDeep,
-    backgroundColor: colors.focusBg,
-  },
-  timerBig: {
-    fontSize: 40,
-    fontWeight: '800',
-    color: colors.primary,
-    textAlign: 'center',
-    marginBottom: 6,
-  },
-  timerMeta: {
-    textAlign: 'center',
-    fontSize: 14,
-    color: colors.textSoft,
-    marginBottom: 16,
-  },
-  timerBtn: { marginBottom: 10 },
-  linkRow: {
-    alignSelf: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-  },
-  linkText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  summaryCard: {
-    flex: 1,
-    minWidth: 0,
-    paddingVertical: 4,
-  },
-  summaryCardSpacing: {
-    marginRight: 10,
-  },
-  summaryLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: colors.textMuted,
-    marginBottom: 6,
-  },
-  summaryValue: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: colors.primary,
-  },
-  summarySub: {
-    marginTop: 4,
-    fontSize: 13,
-    color: colors.textSoft,
-  },
-  profileCard: {
-    alignItems: 'center',
-  },
-  avatar: {
-    width: 96,
-    height: 96,
-    borderRadius: radii.pill,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 14,
-  },
-  avatarText: {
-    color: '#fff',
-    fontSize: 36,
-    fontWeight: '600',
-  },
-  name: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: colors.text,
-    marginBottom: 6,
-  },
-  levelLine: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: colors.primary,
-    marginBottom: 4,
-  },
-  sub: {
-    fontSize: 15,
-    color: colors.textSoft,
-  },
-  progressHead: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  progressLeft: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.textSecondary,
-  },
-  progressRight: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: colors.textMuted,
-  },
-  track: {
-    height: 10,
-    borderRadius: radii.pill,
-    backgroundColor: colors.track,
-    overflow: 'hidden',
-  },
-  fill: {
-    height: '100%',
-    borderRadius: radii.pill,
-    backgroundColor: colors.primaryMid,
-  },
-  streakRow: {
-    marginTop: 18,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  streakMain: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.textSecondary,
-  },
-  streakSub: {
-    marginTop: 2,
-    fontSize: 13,
-    color: colors.textSoft,
-  },
-  muted: {
-    color: colors.textMuted,
-    textAlign: 'center',
-    marginTop: 24,
-  },
-  err: {
-    color: colors.errorText,
-    fontSize: 14,
-  },
-});
+const createHomeStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: c.background },
+    scroll: { paddingHorizontal: 18 },
+    stackBelow: { marginBottom: 16 },
+    pageTitle: {
+      fontSize: 22,
+      fontWeight: '800',
+      color: c.text,
+      marginTop: 4,
+    },
+    timerCard: {
+      borderWidth: 1,
+      borderColor: c.focusBgDeep,
+      backgroundColor: c.focusBg,
+    },
+    timerBig: {
+      fontSize: 40,
+      fontWeight: '800',
+      color: c.text,
+      textAlign: 'center',
+      marginBottom: 6,
+    },
+    timerMeta: {
+      textAlign: 'center',
+      fontSize: 14,
+      color: c.textSoft,
+      marginBottom: 16,
+    },
+    timerBtn: { marginBottom: 10 },
+    linkRow: {
+      alignSelf: 'center',
+      paddingVertical: 8,
+      paddingHorizontal: 4,
+    },
+    linkText: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: c.link,
+    },
+    taskRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 10,
+      borderBottomWidth: 1,
+      borderBottomColor: c.miniBorder,
+    },
+    taskTitle: { flex: 1, fontSize: 15, color: c.text, marginRight: 8 },
+    taskPriority: { fontSize: 12, fontWeight: '600', color: c.textMuted, textTransform: 'capitalize' },
+    summaryRow: { flexDirection: 'row', justifyContent: 'space-between' },
+    summaryCard: { flex: 1, minWidth: 0, paddingVertical: 4 },
+    summaryCardSpacing: { marginRight: 10 },
+    summaryLabel: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: c.textMuted,
+      marginBottom: 6,
+    },
+    summaryValue: { fontSize: 22, fontWeight: '800', color: c.text },
+    summarySub: { marginTop: 4, fontSize: 13, color: c.textSoft },
+    profileCard: { alignItems: 'center' },
+    name: { fontSize: 17, fontWeight: '700', color: c.text, marginBottom: 6 },
+    levelLine: { fontSize: 18, fontWeight: '700', color: c.text, marginBottom: 4 },
+    sub: { fontSize: 15, color: c.textSoft, display: 'none' as const },
+    progressHead: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 10 },
+    progressLeft: { fontSize: 15, fontWeight: '600', color: c.textSecondary },
+    progressRight: { fontSize: 15, fontWeight: '600', color: c.textMuted },
+    track: {
+      height: 10,
+      borderRadius: radii.pill,
+      backgroundColor: c.track,
+      overflow: 'hidden',
+    },
+    fill: {
+      height: '100%',
+      borderRadius: radii.pill,
+      backgroundColor: c.primary,
+    },
+    streakRow: {
+      marginTop: 18,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    streakMain: { fontSize: 15, fontWeight: '700', color: c.textSecondary },
+    streakSub: { marginTop: 2, fontSize: 13, color: c.textSoft },
+    muted: { color: c.textMuted, textAlign: 'center', marginTop: 24 },
+    err: { color: c.errorText, fontSize: 14 },
+  });

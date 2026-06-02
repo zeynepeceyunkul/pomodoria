@@ -3,8 +3,12 @@ import { useNavigate, useOutletContext } from 'react-router-dom';
 import { AuthHttpError } from '../api/http';
 import { getMySessions, getSessionStats } from '../api/sessions';
 import type { SessionRecord, SessionStatsResponse } from '../api/sessions';
+import { getMyTasks } from '../api/tasks';
+import type { TaskRecord } from '../api/tasks';
+import { CharacterAvatar } from '../components/CharacterAvatar';
 import { FocusTimer } from '../components/FocusTimer';
 import type { AppOutletContext } from '../layout/outletContext';
+import { buildCharacterState } from '../lib/characterEvolution';
 import { aggregateSessionRanges, formatMinutes } from '../lib/sessionAggregate';
 import { XP_PER_LEVEL, xpIntoCurrentLevel, xpThresholdForCurrentTier } from '../lib/xpDisplay';
 import styles from './DashboardPage.module.css';
@@ -70,6 +74,7 @@ export function DashboardPage() {
 
   const [stats, setStats] = useState<SessionStatsResponse | null>(null);
   const [sessionList, setSessionList] = useState<SessionRecord[]>([]);
+  const [todayTasks, setTodayTasks] = useState<TaskRecord[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loadingData, setLoadingData] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
@@ -78,9 +83,14 @@ export function DashboardPage() {
     setLoadingData(true);
     setLoadError(null);
     try {
-      const [statsRes, sessions] = await Promise.all([getSessionStats(), getMySessions()]);
+      const [statsRes, sessions, tasks] = await Promise.all([
+        getSessionStats(),
+        getMySessions(),
+        getMyTasks({ today: true }),
+      ]);
       setStats(statsRes);
       setSessionList(sessions);
+      setTodayTasks(tasks.filter((t) => t.status !== 'completed').slice(0, 5));
     } catch (e) {
       if (e instanceof AuthHttpError && e.status === 401) {
         navigate('/login', { replace: true });
@@ -157,20 +167,18 @@ export function DashboardPage() {
   }
 
   const xp = me.xp ?? 0;
+  const character = me.character ?? buildCharacterState(me.level ?? 1);
 
   return (
     <div className={styles.wrap}>
       <div className={styles.grid}>
         <div className={styles.leftCol}>
           <section className={styles.card} aria-labelledby="profile-heading">
-            <div className={styles.profileAvatar} aria-hidden>
-              ?
-            </div>
+            <CharacterAvatar character={character} size="md" />
             <h2 id="profile-heading" className={styles.profileName}>
               {me.name}
             </h2>
-            <p className={styles.profileLevel}>Level {me.level} Warrior</p>
-            <p className={styles.profileSub}>Keep grinding!</p>
+            <p className={styles.profileLevel}>Level {me.level}</p>
           </section>
 
           <FocusTimer />
@@ -220,6 +228,29 @@ export function DashboardPage() {
                 <p className={styles.miniSub}>{agg.todayXp} XP earned</p>
               </div>
             </div>
+          </section>
+
+          <section className={styles.card} aria-labelledby="tasks-heading">
+            <div className={styles.tasksHead}>
+              <h2 id="tasks-heading" className={styles.cardTitle}>
+                Today&apos;s Tasks
+              </h2>
+              <button type="button" className={styles.tasksLink} onClick={() => navigate('/tasks')}>
+                View all
+              </button>
+            </div>
+            {todayTasks.length === 0 ? (
+              <p className={styles.tasksEmpty}>No open tasks for today.</p>
+            ) : (
+              <ul className={styles.tasksList}>
+                {todayTasks.map((task) => (
+                  <li key={task._id} className={styles.tasksItem}>
+                    <span>{task.title}</span>
+                    <span className={styles.tasksPriority}>{task.priority}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
 
           <section className={styles.card} aria-labelledby="week-heading">

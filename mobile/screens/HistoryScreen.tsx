@@ -7,10 +7,17 @@ import {
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, radii } from '../constants/theme';
+import { radii } from '../constants/theme';
 import { Card } from '../components/Card';
 import { useTabContentPadding } from '../hooks/useTabContentPadding';
+import { useThemedStyles } from '../hooks/useThemedStyles';
+import type { ThemeColors } from '../hooks/useThemeColors';
 import { formatMinutes } from '../lib/formatMinutes';
+import {
+  countCompletedAllTime,
+  countCompletedInMonth,
+  countCompletedInWeek,
+} from '../lib/historyStats';
 import { aggregateSessionRanges } from '../lib/sessionAggregate';
 import { AuthHttpError } from '../services/http';
 import { getMySessions, type SessionRecord } from '../services/sessions';
@@ -31,6 +38,7 @@ function formatShort(iso: string): string {
 }
 
 export function HistoryScreen() {
+  const styles = useThemedStyles(createHistoryStyles);
   const { signOut } = useAuth();
   const bottomPad = useTabContentPadding(24);
   const [items, setItems] = useState<SessionRecord[]>([]);
@@ -39,6 +47,9 @@ export function HistoryScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const agg = useMemo(() => aggregateSessionRanges(items), [items]);
+  const weekCompleted = useMemo(() => countCompletedInWeek(items), [items]);
+  const monthCompleted = useMemo(() => countCompletedInMonth(items), [items]);
+  const allCompleted = useMemo(() => countCompletedAllTime(items), [items]);
 
   const load = useCallback(async () => {
     setError(null);
@@ -95,6 +106,23 @@ export function HistoryScreen() {
           <Text style={styles.summarySub}>{formatMinutes(agg.todayMinutes)} focus</Text>
         </Card>
       </View>
+      <View style={[styles.summaryRow, styles.summaryRowSecond]}>
+        <Card style={[styles.summaryCard, styles.summarySpacing]}>
+          <Text style={styles.summaryLabel}>This week</Text>
+          <Text style={styles.summaryValue}>{weekCompleted}</Text>
+          <Text style={styles.summarySub}>completed</Text>
+        </Card>
+        <Card style={[styles.summaryCard, styles.summarySpacing]}>
+          <Text style={styles.summaryLabel}>This month</Text>
+          <Text style={styles.summaryValue}>{monthCompleted}</Text>
+          <Text style={styles.summarySub}>completed</Text>
+        </Card>
+        <Card style={styles.summaryCard}>
+          <Text style={styles.summaryLabel}>All time</Text>
+          <Text style={styles.summaryValue}>{allCompleted}</Text>
+          <Text style={styles.summarySub}>completed</Text>
+        </Card>
+      </View>
     </View>
   );
 
@@ -111,7 +139,7 @@ export function HistoryScreen() {
         }
         ListEmptyComponent={
           !loading ? (
-            <Text style={styles.empty}>No sessions yet. Finish a focus round to see it here.</Text>
+            <Text style={styles.empty}>No sessions yet.</Text>
           ) : null
         }
         renderItem={({ item }) => (
@@ -133,79 +161,58 @@ export function HistoryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  headerBlock: {
-    paddingBottom: 8,
-  },
-  pageTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: colors.text,
-    marginBottom: 12,
-    marginTop: 4,
-  },
-  muted: { color: colors.textMuted, marginBottom: 8 },
-  err: { color: colors.errorText, marginBottom: 8 },
-  summaryRow: {
-    flexDirection: 'row',
-    marginBottom: 14,
-  },
-  summaryCard: {
-    flex: 1,
-    minWidth: 0,
-    paddingVertical: 8,
-  },
-  summarySpacing: {
-    marginRight: 8,
-  },
-  summaryLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: colors.textMuted,
-    marginBottom: 4,
-  },
-  summaryValue: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: colors.primary,
-  },
-  summarySub: {
-    marginTop: 2,
-    fontSize: 11,
-    color: colors.textSoft,
-  },
-  list: { paddingHorizontal: 18, paddingTop: 0 },
-  empty: { color: colors.textMuted, marginTop: 24, textAlign: 'center', paddingHorizontal: 12 },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: radii.card - 2,
-    padding: 14,
-    borderWidth: 1,
-    borderColor: colors.miniBorder,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  type: { fontSize: 15, fontWeight: '700', color: colors.text },
-  time: { marginTop: 4, fontSize: 13, color: colors.textSoft },
-  rowGap: { marginLeft: 10 },
-  badge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: radii.pill,
-    backgroundColor: colors.miniBg,
-    borderWidth: 1,
-    borderColor: colors.miniBorder,
-  },
-  badgeText: { fontSize: 12, fontWeight: '700', color: colors.textMuted },
-  xp: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.primary,
-  },
-});
+const createHistoryStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: c.background },
+    headerBlock: { paddingBottom: 8 },
+    pageTitle: {
+      fontSize: 22,
+      fontWeight: '800',
+      color: c.text,
+      marginBottom: 12,
+      marginTop: 4,
+    },
+    muted: { color: c.textMuted, marginBottom: 8 },
+    err: { color: c.errorText, marginBottom: 8 },
+    summaryRow: { flexDirection: 'row', marginBottom: 10 },
+    summaryRowSecond: { marginBottom: 14 },
+    summaryCard: { flex: 1, minWidth: 0, paddingVertical: 8 },
+    summarySpacing: { marginRight: 8 },
+    summaryLabel: {
+      fontSize: 11,
+      fontWeight: '700',
+      color: c.textMuted,
+      marginBottom: 4,
+    },
+    summaryValue: { fontSize: 18, fontWeight: '800', color: c.text },
+    summarySub: { marginTop: 2, fontSize: 11, color: c.textSoft },
+    list: { paddingHorizontal: 18, paddingTop: 0 },
+    empty: { color: c.textMuted, marginTop: 24, textAlign: 'center', paddingHorizontal: 12 },
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: c.surface,
+      borderRadius: radii.card - 2,
+      padding: 14,
+      borderWidth: 1,
+      borderColor: c.miniBorder,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 8,
+      elevation: 2,
+    },
+    type: { fontSize: 15, fontWeight: '700', color: c.text },
+    time: { marginTop: 4, fontSize: 13, color: c.textSoft },
+    rowGap: { marginLeft: 10 },
+    badge: {
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderRadius: radii.pill,
+      backgroundColor: c.miniBg,
+      borderWidth: 1,
+      borderColor: c.miniBorder,
+    },
+    badgeText: { fontSize: 12, fontWeight: '700', color: c.textMuted },
+    xp: { fontSize: 14, fontWeight: '700', color: c.textSecondary },
+  });

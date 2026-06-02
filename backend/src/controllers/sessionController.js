@@ -1,12 +1,14 @@
 const mongoose = require('mongoose');
 const Session = require('../models/Session');
+const Task = require('../models/Task');
 const User = require('../models/User');
-const { calculateXP, calculateLevel } = require('../utils/xpCalculator');
+const { calculateXP, calculateFocusSessionXp, calculateLevelUpBonus, calculateStreakBonus, FOCUS_SESSION_XP } = require('../utils/xpCalculator');
 const {
   utcDayKey,
   currentStreakUtc,
   longestStreakUtc,
 } = require('../utils/streakCalculator');
+const { applyXpAndGamification, recomputeUserStreak } = require('../utils/gamification');
 
 const SESSION_TYPES = ['focus', 'break'];
 
@@ -90,6 +92,18 @@ const createSession = async (req, res) => {
     const completed = normalizeBoolean(req.body.completed, false);
     const xpEarned = calculateXP({ type, completed });
 
+    let taskId = null;
+    if (req.body.taskId !== undefined && req.body.taskId !== null && req.body.taskId !== '') {
+      if (!mongoose.Types.ObjectId.isValid(req.body.taskId)) {
+        return res.status(400).json({ message: 'Invalid taskId' });
+      }
+      const task = await Task.findOne({ _id: req.body.taskId, userId });
+      if (!task) {
+        return res.status(404).json({ message: 'Linked task not found' });
+      }
+      taskId = task._id;
+    }
+
     const session = await Session.create({
       userId,
       type,
@@ -98,29 +112,42 @@ const createSession = async (req, res) => {
       endTime,
       completed,
       xpEarned,
+      taskId,
     });
 
+    let gamification = null;
     if (type === 'focus' && completed) {
       const user = await User.findById(userId);
       if (user) {
-        if (xpEarned > 0) {
-          const newTotalXp = (user.xp || 0) + xpEarned;
-          user.xp = newTotalXp;
-          user.level = calculateLevel(newTotalXp);
+        const streak = await recomputeUserStreak(userId);
+        const streakBonus = calculateStreakBonus(streak);
+        const xpEarnedTotal = calculateFocusSessionXp(streak);
+        session.xpEarned = xpEarnedTotal;
+        await session.save();
+
+        const oldLevel = user.level || 1;
+        gamification = await applyXpAndGamification(user, xpEarnedTotal);
+        const levelUpBonus = calculateLevelUpBonus(oldLevel, user.level);
+        if (levelUpBonus > 0) {
+          const extra = await applyXpAndGamification(user, levelUpBonus);
+          gamification = {
+            ...extra,
+            newlyUnlockedAchievements: [
+              ...(gamification.newlyUnlockedAchievements || []),
+              ...(extra.newlyUnlockedAchievements || []),
+            ],
+          };
         }
-        const completedFocus = await Session.find({
-          userId,
-          type: 'focus',
-          completed: true,
-        })
-          .select('startTime')
-          .lean();
-        user.streak = currentStreakUtc(completedFocus);
-        await user.save();
+        gamification.xpBreakdown = {
+          base: FOCUS_SESSION_XP,
+          streakBonus,
+          levelUpBonus,
+          total: xpEarnedTotal + levelUpBonus,
+        };
       }
     }
 
-    return res.status(201).json(session);
+    return res.status(201).json({ session, gamification });
   } catch (error) {
     console.error('Create session error:', error);
     if (error.name === 'ValidationError') {
@@ -207,7 +234,36 @@ const getSessionAnalytics = async (req, res) => {
         date: key,
         focusMinutes,
         completedSessions: daySessions.length,
+        xpEarned: daySessions.reduce((sum, s) => sum + (s.xpEarned || 0), 0),
       });
+    }
+
+    const last30DaysXp = [];
+    for (let i = 29; i >= 0; i -= 1) {
+      const d = new Date();
+      d.setUTCHours(0, 0, 0, 0);
+      d.setUTCDate(d.getUTCDate() - i);
+      const key = d.toISOString().slice(0, 10);
+      const daySessions = completedFocus.filter((s) => utcDayKey(s.startTime) === key);
+      last30DaysXp.push({
+        date: key,
+        xpEarned: daySessions.reduce((sum, s) => sum + (s.xpEarned || 0), 0),
+      });
+    }
+
+    const monthlyFocus = [];
+    for (let i = 5; i >= 0; i -= 1) {
+      const monthStart = new Date(Date.UTC(new Date().getUTCFullYear(), new Date().getUTCMonth() - i, 1));
+      const monthEnd = new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + 1, 1));
+      const label = monthStart.toLocaleDateString('en-US', { month: 'short', year: '2-digit', timeZone: 'UTC' });
+      let focusMinutes = 0;
+      for (const s of completedFocus) {
+        const t = new Date(s.startTime);
+        if (t >= monthStart && t < monthEnd) {
+          focusMinutes += s.duration || 0;
+        }
+      }
+      monthlyFocus.push({ label, focusMinutes });
     }
 
     const weekStart = startOfUtcWeekMonday(new Date());
@@ -258,6 +314,8 @@ const getSessionAnalytics = async (req, res) => {
       todayFocusMinutes,
       completedFocusSessions: completedFocus.length,
       totalFocusMinutes: completedFocus.reduce((sum, s) => sum + (s.duration || 0), 0),
+      last30DaysXp,
+      monthlyFocus,
     });
   } catch (error) {
     console.error('Get session analytics error:', error);

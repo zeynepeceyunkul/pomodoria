@@ -75,7 +75,8 @@ async function postJson<T>(path: string, body: unknown): Promise<{ res: Response
       body: JSON.stringify(body),
     });
   } catch {
-    throw new Error('Cannot reach the server. Is the API running?');
+    const base = getApiBase();
+    throw new Error(`Cannot reach the server at ${base}. Is the backend running? (npm run dev in backend/)`);
   }
 
   let data = {} as T;
@@ -195,4 +196,47 @@ export async function logoutRequest(refreshToken: string | null): Promise<void> 
   } catch {
     /* best-effort */
   }
+}
+
+export async function forgotPasswordRequest(
+  email: string,
+): Promise<{ message: string; devResetUrl?: string }> {
+  const { res, data } = await postJson<{ message: string; devVerificationUrl?: string }>(
+    '/forgot-password',
+    { email },
+  );
+
+  if (!res.ok) {
+    throw new AuthApiError(getErrorMessage(data, 'Could not send reset link.'), res.status);
+  }
+
+  return {
+    message: data.message || 'If that email is registered, a password reset link was sent.',
+    devResetUrl: data.devVerificationUrl,
+  };
+}
+
+export type ResetPasswordResponse = {
+  message: string;
+  email: string;
+};
+
+export async function resetPasswordRequest(
+  token: string,
+  password: string,
+): Promise<ResetPasswordResponse> {
+  const { res, data } = await postJson<ResetPasswordResponse & { code?: string }>(
+    '/reset-password',
+    { token, password },
+  );
+
+  if (!res.ok) {
+    throw new AuthApiError(getErrorMessage(data, 'Password reset failed.'), res.status);
+  }
+
+  if (typeof data.email !== 'string') {
+    throw new Error('Invalid response from server.');
+  }
+
+  return data;
 }

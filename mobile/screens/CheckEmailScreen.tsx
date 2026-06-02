@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react';
-import { Linking, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { parseAuthLink, parseTokenFromUrl } from '../lib/authLink';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { colors, radii, shadows } from '../constants/theme';
+import { radii, shadows } from '../constants/theme';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { AuthApiError, resendVerificationRequest } from '../services/auth';
+import { useThemedStyles } from '../hooks/useThemedStyles';
+import type { ThemeColors } from '../hooks/useThemeColors';
 import type { RootStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'CheckEmail'>;
 
 export function CheckEmailScreen({ navigation, route }: Props) {
+  const styles = useThemedStyles(createCheckEmailStyles);
   const email = route.params.email;
   const [devUrl, setDevUrl] = useState(route.params.devVerificationUrl ?? '');
   const [message, setMessage] = useState<string | null>(null);
@@ -57,9 +61,22 @@ export function CheckEmailScreen({ navigation, route }: Props) {
           {devUrl ? (
             <View style={styles.devBox}>
               <Text style={styles.devTitle}>Development verification link</Text>
-              <Pressable onPress={() => void Linking.openURL(devUrl)}>
-                <Text style={styles.devLink}>{devUrl}</Text>
+              <Pressable
+                onPress={() => {
+                  const target = parseAuthLink(devUrl);
+                  if (target?.screen === 'VerifyEmail') {
+                    navigation.navigate('VerifyEmail', target.params);
+                    return;
+                  }
+                  const token = parseTokenFromUrl(devUrl);
+                  if (token) navigation.navigate('VerifyEmail', { token });
+                }}
+              >
+                <Text style={styles.devLink}>Open verification in app</Text>
               </Pressable>
+              <Text style={styles.devUrlText} selectable>
+                {devUrl}
+              </Text>
             </View>
           ) : null}
 
@@ -81,47 +98,45 @@ export function CheckEmailScreen({ navigation, route }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background },
-  scroll: { padding: 20 },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.card,
-    padding: 28,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: colors.primary,
-    marginBottom: 14,
-  },
-  body: {
-    fontSize: 15,
-    lineHeight: 22,
-    color: colors.textSoft,
-    marginBottom: 18,
-  },
-  devBox: {
-    backgroundColor: '#fffbeb',
-    borderWidth: 1,
-    borderColor: '#fde68a',
-    borderRadius: radii.sm,
-    padding: 12,
-    marginBottom: 14,
-  },
-  devTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#92400e',
-    marginBottom: 8,
-  },
-  devLink: {
-    fontSize: 12,
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  ok: { color: '#166534', marginBottom: 12, fontSize: 14 },
-  err: { color: colors.errorText, marginBottom: 12, fontSize: 14 },
-  linkRow: { marginTop: 20, alignSelf: 'center', padding: 8 },
-  link: { color: colors.primary, fontWeight: '700', fontSize: 15 },
-});
+const createCheckEmailStyles = (c: ThemeColors) =>
+  StyleSheet.create({
+    safe: { flex: 1, backgroundColor: c.background },
+    scroll: { padding: 20 },
+    card: {
+      backgroundColor: c.surface,
+      borderRadius: radii.card,
+      padding: 28,
+    },
+    title: {
+      fontSize: 26,
+      fontWeight: '700',
+      color: c.text,
+      marginBottom: 14,
+    },
+    body: {
+      fontSize: 15,
+      lineHeight: 22,
+      color: c.textSoft,
+      marginBottom: 18,
+    },
+    devBox: {
+      backgroundColor: c.devBoxBg,
+      borderWidth: 1,
+      borderColor: c.devBoxBorder,
+      borderRadius: radii.sm,
+      padding: 12,
+      marginBottom: 14,
+    },
+    devTitle: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: c.devBoxTitle,
+      marginBottom: 8,
+    },
+    devLink: { fontSize: 14, color: c.link, fontWeight: '700', marginBottom: 8 },
+    devUrlText: { fontSize: 11, color: c.textSoft, lineHeight: 16 },
+    ok: { color: c.successText, marginBottom: 12, fontSize: 14 },
+    err: { color: c.errorText, marginBottom: 12, fontSize: 14 },
+    linkRow: { marginTop: 20, alignSelf: 'center', padding: 8 },
+    link: { color: c.link, fontWeight: '700', fontSize: 15 },
+  });

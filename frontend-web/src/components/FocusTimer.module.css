@@ -1,5 +1,5 @@
 .card {
-  background: #ffffff;
+  background: var(--pom-surface);
   border-radius: 14px;
   padding: 28px 24px 24px;
   box-shadow:
@@ -12,7 +12,7 @@
   text-align: center;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #9ca3af;
+  color: var(--pom-text-soft);
 }
 
 .timer {
@@ -22,7 +22,7 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.04em;
-  color: #583d5a;
+  color: var(--pom-highlight);
   line-height: 1;
 }
 
@@ -38,8 +38,8 @@
   font-family: inherit;
   font-size: 1rem;
   font-weight: 600;
-  color: #ffffff;
-  background: #583d5a;
+  color: var(--pom-on-primary);
+  background: var(--pom-primary);
   border: none;
   border-radius: 10px;
   cursor: pointer;
@@ -47,7 +47,7 @@
 }
 
 .start:hover:not(:disabled) {
-  background: #4a3350;
+  background: var(--pom-primary-hover);
 }
 
 .start:disabled {
@@ -66,16 +66,18 @@
   font-family: inherit;
   font-size: 0.9375rem;
   font-weight: 600;
-  color: #583d5a;
-  background: #e8eaee;
-  border: none;
+  color: var(--pom-btn-secondary-text);
+  background: var(--pom-btn-secondary-bg);
+  border: 1px solid var(--pom-border);
   border-radius: 10px;
   cursor: pointer;
-  transition: background-color 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .secondaryBtn:hover {
-  background: #dce0e7;
+  background: var(--pom-btn-secondary-hover);
 }
 
 @media (max-width: 420px) {

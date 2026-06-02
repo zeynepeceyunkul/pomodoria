@@ -23,6 +23,7 @@ export type CreateFocusSessionBody = {
   startTime: string;
   completed: boolean;
   endTime?: string;
+  taskId?: string;
 };
 
 export function getSessionStats(): Promise<SessionStatsResponse> {
@@ -37,19 +38,46 @@ export type SessionAnalyticsResponse = {
   currentStreak: number;
   streakVerified: number;
   longestStreak: number;
-  last7Days: Array<{ date: string; focusMinutes: number; completedSessions: number }>;
+  last7Days: Array<{ date: string; focusMinutes: number; completedSessions: number; xpEarned?: number }>;
   thisWeekDaily: Array<{ label: string; focusMinutes: number }>;
   weekdayTotalsAllTime: Array<{ label: string; focusMinutes: number }>;
   mostProductiveWeekday: string | null;
   todayFocusMinutes: number;
   completedFocusSessions: number;
   totalFocusMinutes: number;
+  last30DaysXp?: Array<{ date: string; xpEarned: number }>;
+  monthlyFocus?: Array<{ label: string; focusMinutes: number }>;
 };
 
 export function getSessionAnalytics(): Promise<SessionAnalyticsResponse> {
   return authGetJson<SessionAnalyticsResponse>('/api/sessions/analytics');
 }
 
-export function createFocusSession(body: CreateFocusSessionBody): Promise<SessionRecord> {
-  return authPostJson<SessionRecord>('/api/sessions', body);
+export type CreateBreakSessionBody = {
+  type: 'break';
+  duration: number;
+  startTime: string;
+  completed: boolean;
+  endTime?: string;
+};
+
+export type CreateSessionResponse = {
+  session: SessionRecord;
+  gamification?: {
+    newlyUnlockedAchievements?: Array<{ id: string; title: string; description?: string }>;
+    xpBreakdown?: {
+      base: number;
+      streakBonus: number;
+      levelUpBonus: number;
+      total: number;
+    };
+  } | null;
+};
+
+export function createFocusSession(body: CreateFocusSessionBody): Promise<CreateSessionResponse> {
+  return authPostJson<CreateSessionResponse>('/api/sessions', body);
+}
+
+export function createBreakSession(body: CreateBreakSessionBody): Promise<CreateSessionResponse> {
+  return authPostJson<CreateSessionResponse>('/api/sessions', body);
 }

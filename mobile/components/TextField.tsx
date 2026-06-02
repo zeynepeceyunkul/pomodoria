@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import { StyleSheet, Text, TextInput, View } from 'react-native';
-import { colors, radii } from '../constants/theme';
+import { radii } from '../constants/theme';
+import { useThemeColors } from '../hooks/useThemeColors';
 
 type Props = {
   label: string;
@@ -24,6 +26,28 @@ export function TextField({
   editable = true,
   error,
 }: Props) {
+  const c = useThemeColors();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        wrap: { marginBottom: 18 },
+        label: { marginBottom: 8, fontSize: 14, fontWeight: '500', color: c.textSoft },
+        input: {
+          borderWidth: 1,
+          borderColor: c.border,
+          borderRadius: radii.sm,
+          paddingVertical: 12,
+          paddingHorizontal: 14,
+          fontSize: 16,
+          color: c.text,
+          backgroundColor: c.surface,
+        },
+        inputInvalid: { borderColor: c.errorBorder },
+        err: { marginTop: 6, fontSize: 13, color: c.errorText },
+      }),
+    [c],
+  );
+
   return (
     <View style={styles.wrap}>
       <Text style={styles.label}>{label}</Text>
@@ -31,7 +55,7 @@ export function TextField({
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={colors.placeholder}
+        placeholderTextColor={c.placeholder}
         secureTextEntry={Boolean(secureTextEntry)}
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize}
@@ -42,33 +66,3 @@ export function TextField({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrap: {
-    marginBottom: 18,
-  },
-  label: {
-    marginBottom: 8,
-    fontSize: 14,
-    fontWeight: '500',
-    color: colors.textSoft,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.sm,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    fontSize: 16,
-    color: colors.text,
-    backgroundColor: colors.surface,
-  },
-  inputInvalid: {
-    borderColor: colors.errorBorder,
-  },
-  err: {
-    marginTop: 6,
-    fontSize: 13,
-    color: colors.errorText,
-  },
-});

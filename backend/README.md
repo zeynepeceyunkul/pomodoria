@@ -24,7 +24,7 @@ For production, set a strong `JWT_SECRET` (32+ characters), `JWT_REFRESH_SECRET`
 
 ### Email verification & JWT
 
-- **Register** creates the account and sends a verification email (link opens `APP_PUBLIC_URL/verify-email?token=...`). No login until verified.
+- **Register** creates the account and sends a verification email (web: `APP_PUBLIC_URL/verify-email?token=...`, mobile: `MOBILE_APP_SCHEME://verify-email?token=...`). No login until verified.
 - **Login** requires a verified email.
 - **Access token** (~1h) + **refresh token** (~7d), with issuer/audience checks.
 - Without SMTP in dev, the verification URL is printed in the backend console.

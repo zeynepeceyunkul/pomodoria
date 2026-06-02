@@ -3,6 +3,9 @@ const User = require('../models/User');
 const Settings = require('../models/Settings');
 const { xpToNextLevel } = require('../utils/xpCalculator');
 const { currentStreakUtc } = require('../utils/streakCalculator');
+const { buildCharacterState } = require('../utils/characterEvolution');
+const { buildGamificationContext } = require('../utils/gamification');
+const { listAchievementsForUser } = require('../utils/achievements');
 
 const getMe = async (req, res) => {
   try {
@@ -31,9 +34,11 @@ const getMe = async (req, res) => {
     }
 
     const user = userDoc.toObject();
+    const character = buildCharacterState(user.level);
 
     return res.status(200).json({
       ...user,
+      character,
       settings: {
         focusDuration: settings.focusDuration ?? 25,
         breakDuration: settings.breakDuration ?? 5,
@@ -80,6 +85,7 @@ const getProgress = async (req, res) => {
       level: user.level,
       streak,
       xpToNextLevel: xpToNextLevel(xp),
+      character: buildCharacterState(user.level),
     });
   } catch (error) {
     console.error('Get progress error:', error);
@@ -200,9 +206,72 @@ const updateSettings = async (req, res) => {
   }
 };
 
+const updateProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const { name, avatar } = req.body;
+
+    if (name !== undefined) {
+      if (typeof name !== 'string' || name.trim().length < 2) {
+        return res.status(400).json({ message: 'name must be at least 2 characters' });
+      }
+      if (name.trim().length > 32) {
+        return res.status(400).json({ message: 'name must be at most 32 characters' });
+      }
+      user.name = name.trim();
+    }
+
+    if (avatar !== undefined) {
+      if (avatar !== null && typeof avatar !== 'string') {
+        return res.status(400).json({ message: 'avatar must be a string or null' });
+      }
+      if (avatar !== null && avatar !== '' && avatar.trim().length > 300_000) {
+        return res.status(400).json({ message: 'avatar image is too large' });
+      }
+      user.avatar = avatar === null || avatar === '' ? null : avatar.trim();
+    }
+
+    await user.save();
+
+    const userObj = user.toObject();
+    delete userObj.password;
+
+    return res.status(200).json({
+      ...userObj,
+      character: buildCharacterState(user.level),
+    });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    return res.status(500).json({ message: 'Server error while updating profile' });
+  }
+};
+
+const getAchievements = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const context = await buildGamificationContext(req.user.id, user);
+    const achievements = listAchievementsForUser(user.unlockedAchievements || [], context);
+
+    return res.status(200).json({ achievements });
+  } catch (error) {
+    console.error('Get achievements error:', error);
+    return res.status(500).json({ message: 'Server error while fetching achievements' });
+  }
+};
+
 module.exports = {
   getMe,
   getProgress,
   getSettings,
   updateSettings,
+  updateProfile,
+  getAchievements,
 };
